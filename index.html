@@ -491,6 +491,7 @@ const yes=v=>/^(yes|y|true|1)$/i.test(String(v).trim());
 function secFromCode(c){c=String(c||"");const m=c.match(/S\d/i);if(!m)return SECTIONS_DEFAULT[0];const code=m[0].toUpperCase();
   return (ST.bankSections.find(s=>s.toUpperCase().startsWith(code))||SECTIONS_DEFAULT.find(s=>s.startsWith(code))||SECTIONS_DEFAULT[0])}
 const codeFromSec=s=>{const m=String(s).match(/^S\d/i);return m?m[0].toUpperCase():s};
+function postedFromId(v){const m=String(v).match(/(\d{18,20})/);if(!m)return null;try{const d=new Date(Number(BigInt(m[1])>>22n));return d.getFullYear()>2010?d:null}catch(e){return null}}
 const WEEKDAYS=["Monday","Tuesday","Wednesday","Thursday","Friday"];
 function fmtStamp(d){return d?fd(d)+", "+d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):"not yet"}
 
@@ -526,7 +527,8 @@ async function loadAll(){
   // Saved posts
   DATA.saved=sv.filter(r=>r["Post URL"]||r["First lines"]).map(r=>({id:"s"+r._row,_row:r._row,author:String(r["Author"]||"LinkedIn post"),role:"",
     text:String(r["First lines"]||""),savedOn:isoD(toDate(r["Saved on"]))||isoD(TODAY),cat:String(r["Folder"]||""),note:String(r["Note"]||""),
-    img:String(r["Image URL"]||"")||null,url:String(r["Post URL"]||"")})).sort((a,b)=>b.savedOn.localeCompare(a.savedOn));
+    img:String(r["Image URL"]||"")||null,url:String(r["Post URL"]||""),postedOn:postedFromId(String(r["Post URL"]||r["ID"]))}))
+    .sort((a,b)=>b._row-a._row); // newest save first: the extension adds each new save at the bottom
 
   // Substack: one card per writer, newest first
   const W={};
@@ -865,7 +867,7 @@ function savedCard(s){
   return `<div class="pc" data-id="${s.id}">
    <div class="img">${s.img?`<img src="${esc(s.img)}" alt="">`:ph(+s.id.replace(/\D/g,""),"")}${s.cat?`<span class="cat">${esc(s.cat)}</span>`:""}</div>
    <div class="bd">
-    <div class="who"><div class="av">${initials(s.author)}</div><div><b>${esc(s.author)}</b><small>Saved ${fd(parse(s.savedOn))}</small></div>
+    <div class="who"><div class="av">${initials(s.author)}</div><div><b>${esc(s.author)}</b><small>${s.postedOn?"Posted "+fd(s.postedOn):"Saved "+fd(parse(s.savedOn))}</small></div>
      <a href="${esc(s.url)}" target="_blank" rel="noopener" title="Open on LinkedIn" style="margin-left:auto;color:var(--muted)">${ICON.ext}</a></div>
     <div class="clamp">${esc(s.text)}</div>
     <div class="notebox ${s.note?"":"empty"}" data-note="${s.id}">${s.note?esc(s.note):"Why I saved this..."}</div>
