@@ -495,9 +495,9 @@ function postedFromId(v){const m=String(v).match(/(\d{18,20})/);if(!m)return nul
 const WEEKDAYS=["Monday","Tuesday","Wednesday","Thursday","Friday"];
 function fmtStamp(d){return d?fd(d)+", "+d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):"not yet"}
 
-const TABS=["Analytics","Insights","Saved posts","Substack","Idea Bank","Post Pipeline","Engagement","People feed","Trending topics"];
+const TABS=["Analytics","Insights","Saved posts","Substack","Idea Bank","Post Pipeline","Engagement","People feed","Trending topics","Substack feeds"];
 async function loadAll(){
-  const v=await readTabs(TABS);const [an,ins,sv,sub,idb,pp,eng,pf,tt]=v.map(rowsToObjs);
+  const v=await readTabs(TABS);const [an,ins,sv,sub,idb,pp,eng,pf,tt,sf]=v.map(rowsToObjs);
 
   // Analytics -> posts
   let lastSync=null;
@@ -530,16 +530,16 @@ async function loadAll(){
     img:String(r["Image URL"]||"")||null,url:String(r["Post URL"]||""),postedOn:postedFromId(String(r["Post URL"]||r["ID"]))}))
     .sort((a,b)=>b._row-a._row); // newest save first: the extension adds each new save at the bottom
 
-  // Substack: one card per writer, newest first
-  const W={};
-  sub.forEach(r=>{const w=String(r["Writer"]||"").trim();if(!w)return;
-    W[w]=W[w]||{writer:w,by:"",feed:"",removed:false,rows:[],posts:[]};W[w].rows.push(r._row);
-    if(r["Feed URL"]&&!W[w].feed){W[w].feed=String(r["Feed URL"]);W[w].by=domain(W[w].feed)}
-    if(/removed/i.test(r["Status"]))W[w].removed=true;
-    if(r["Post URL"])W[w].posts.push({id:"b"+r._row,_row:r._row,title:String(r["Post title"]||"Untitled"),date:isoD(toDate(r["Published"]))||isoD(TODAY),ex:"",url:String(r["Post URL"]),read:/^read$/i.test(String(r["Status"]).trim())});
+  // Substack: Google reads each feed in the "Substack feeds" tab; the "Substack" tab remembers what you've read
+  const readKeys=new Set(sub.filter(r=>/^read$/i.test(String(r["Status"]).trim())).map(r=>String(r["Post URL"]||r["Writer"]+"|"+r["Post title"])));
+  const slugTitle=u=>{const m=String(u).match(/\/p\/([^/?#]+)/);return m?m[1].replace(/-[0-9a-f]{3}$/,"").replace(/-/g," ").replace(/^./,c=>c.toUpperCase()):""};
+  DATA.substack=sf.filter(r=>String(r["Writer"]).trim()&&!/removed/i.test(r["Status"])).map(r=>{
+    const feed=String(r["Feed URL"]||""),site=feed.replace(/\/feed\/?$/,"");
+    const posts=[1,2,3,4,5].map(i=>{const url=String(r["URL "+i]||""),title=String(r["Title "+i]||"")||slugTitle(url);if(!title)return null;
+      const key=url||(r["Writer"]+"|"+title);return {id:"b"+r._row+"-"+i,key,title,date:isoD(toDate(r["Date "+i]))||isoD(TODAY),ex:"",url:url||site,read:readKeys.has(key)}}).filter(Boolean)
+      .sort((a,b)=>b.date.localeCompare(a.date));
+    return {writer:String(r["Writer"]),by:domain(site),feed,_row:r._row,rows:[],posts};
   });
-  Object.values(W).forEach(w=>w.posts.sort((a,b)=>b.date.localeCompare(a.date)));
-  DATA.substack=Object.values(W).filter(w=>!w.removed);
 
   // Idea Bank -> content bank
   DATA.bank=idb.filter(r=>String(r["Idea"]).trim()&&!/archived/i.test(r["Status"])).map(r=>({id:"i"+r._row,_row:r._row,sec:secFromCode(r["Suggested series"]),
@@ -918,16 +918,16 @@ function unreadCount(){return writerList().reduce((n,w)=>n+w.posts.filter(p=>!ST
 PAGES.substack=()=>{
   const ws=writerList();
   return `<div class="head"><div><h1 class="h1">Substack</h1><p class="sub">One unread post from each writer. Mark it read and their next one moves up.</p></div>
-   <div class="acts"><span class="pill"><span class="live"></span>Checked every morning at 7:00</span><span class="pill">${unreadCount()} unread in total</span></div></div>
+   <div class="acts"><span class="pill"><span class="live"></span>Google checks for new posts every hour or two</span><span class="pill">${unreadCount()} unread in total</span></div></div>
   <div class="sgrid">${ws.map((w,i)=>{const p=currentPost(w);const left=w.posts.filter(x=>!ST.read.includes(x.id)).length;
    const col=["var(--pink)","var(--sage)","var(--tan)","var(--olive)"][i%4];
    return `<div class="sc"><div class="who"><div class="wav" style="background:${col}">${initials(w.writer)}</div><div><b>${esc(w.writer)}</b><small>${esc(w.by)}</small></div><span class="tag2" style="margin-left:auto">${left} unread</span></div>
     ${p?`<h3 class="ttl"><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a></h3><p class="ex">${esc(p.ex)}</p><div class="lbl">${fd(parse(p.date))}, ${parse(p.date).getFullYear()}</div>
-     <div class="ft"><a class="btn primary sm" href="${esc(p.url)}" target="_blank" rel="noopener">${ICON.ext}Open on Substack</a><button class="btn sm" data-read="${p.id}">${ICON.check}Mark as read</button><button class="btn sm" data-send="sub:${p.id}">${ICON.bulb}Content bank</button></div>`
-     :`<div class="empty-state" style="padding:20px">All caught up with ${esc(w.writer)}.</div>`}</div>`}).join("")}</div>${ws.length?"":`<div class="empty-state">No writers yet. Add a Substack link in Settings and its posts show up after the next morning check.</div>`}`;
+     <div class="ft"><a class="btn primary sm" href="${esc(p.url)}" target="_blank" rel="noopener">${ICON.ext}Read post</a><button class="btn sm" data-read="${p.id}">${ICON.check}Mark as read</button><button class="btn sm" data-send="sub:${p.id}">${ICON.bulb}Content bank</button></div>`
+     :`<div class="empty-state" style="padding:20px">All caught up with ${esc(w.writer)}.</div>`}</div>`}).join("")}</div>${ws.length?"":`<div class="empty-state">No writers yet. Add a newsletter link in Settings and its posts show up within an hour or two.</div>`}`;
 };
 PAGES.substack.bind=()=>{
-  document.querySelectorAll("[data-read]").forEach(b=>b.onclick=()=>{const id=b.dataset.read;let p;DATA.substack.forEach(w=>w.posts.forEach(x=>{if(x.id===id)p=x}));ST.read.push(id);if(p)p.read=true;route();if(p)write(setMany([[`'Substack'!F${p._row}`,"Read"]]),"Marked as read. Next one moved up.")});
+  document.querySelectorAll("[data-read]").forEach(b=>b.onclick=()=>{const id=b.dataset.read;let p,ww;DATA.substack.forEach(w=>w.posts.forEach(x=>{if(x.id===id){p=x;ww=w}}));ST.read.push(id);if(p)p.read=true;route();if(p)write(addRow("Substack",[ww.writer,"",p.title,p.key.includes("|")?"":p.key,p.date,"Read"]),"Marked as read. Next one moved up.")});
   bindSend();
 };
 
@@ -1078,12 +1078,13 @@ PAGES.settings.bind=()=>{
     confirmModal(`Remove "${v}"?`,k==="folders"?"Posts in this folder move back to Not sorted.":k==="bankSections"?"Ideas in this section will need a new section.":"You'll stop seeing their posts.",()=>{
       ST[k]=ST[k].filter(x=>x!==v);save();route();
       if(k==="folders"){const ch=ST.saved.filter(s=>s.cat===v);ch.forEach(s=>s.cat="");route();if(ch.length)write(setMany(ch.map(s=>[`'Saved posts'!G${s._row}`,""])),"Removed. Its posts are back in Not sorted.");else toast("Removed")}
-      else if(k==="writers"){const w=DATA.substack.find(x=>x.writer===v);if(w){DATA.substack=DATA.substack.filter(x=>x!==w);route();if(w.rows.length)write(setMany(w.rows.map(r=>[`'Substack'!F${r}`,"Removed"])),"Removed. You won't see their posts any more.")}}
+      else if(k==="writers"){const w=DATA.substack.find(x=>x.writer===v);if(w){DATA.substack=DATA.substack.filter(x=>x!==w);route();if(w._row)write(setMany([[`'Substack feeds'!C${w._row}`,"Removed"]]),"Removed. You won't see their posts any more.")}}
       else toast("Removed")})});
   document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{const k=b.dataset.add,inp=document.querySelector(`[data-addv="${k}"]`),v=inp.value.trim();if(!v||ST[k].includes(v))return;
-    if(k==="writers"){const u=v.replace(/^https?:\/\//,"").replace(/\/.*$/,"").toLowerCase();if(!u.includes("."))return toast("Paste the full link, like name.substack.com");const name=u.split(".")[0];const feed="https://"+u+"/feed";
+    if(k==="writers"){const u=v.replace(/^https?:\/\//,"").replace(/\/.*$/,"").toLowerCase();if(!u.includes("."))return toast("Paste the full link, like name.substack.com");const name=u.replace(/^(www|newsletter|blog)\./,"").split(".")[0].replace(/^./,c=>c.toUpperCase());const feed="https://"+u+"/feed";
       if(DATA.substack.some(w=>w.feed===feed))return toast("Already following");const w={writer:name,by:u,feed,rows:[],posts:[]};DATA.substack.push(w);ST.writers.push(name);route();
-      write(addRow("Substack",[name,feed,"","","","Feed"]).then(r=>{if(r)w.rows.push(r)}),"Added. Their posts show up after the next morning check.");return}
+      write(addRow("Substack feeds",[name,feed,"Active"]).then(r=>{if(!r)return;w._row=r;const F=q=>`=IFERROR(TRANSPOSE(IMPORTFEED(INDEX(B:B,ROW()),"items ${q}",FALSE,5)),"")`;
+        return api("/values:batchUpdate",{method:"POST",body:JSON.stringify({valueInputOption:"USER_ENTERED",data:[["D",F("title")],["I",F("url")],["N",F("created")]].map(([c,f])=>({range:`'Substack feeds'!${c}${r}`,values:[[f]]}))})})}),"Added. Their newest posts appear within an hour or two.");return}
     ST[k].push(v);save();route();toast("Added")});
   $("#bk").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(ST,null,2)],{type:"application/json"}));a.download="command-center-backup-"+iso(new Date())+".json";a.click()};
   
