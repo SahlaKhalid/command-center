@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sahla's Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ===================== THEME (swap these for your own colours) ===================== */
+:root{
+  --bg:#F3EEE4; --panel:#FAF6EE; --card:#FFFCF6; --line:#E7DFD0; --line2:#EFE8DB;
+  --ink:#2A2A24; --ink2:#4A4840; --muted:#8C877B;
+  --side:#2E3A2B; --side-ink:#EEF1E6; --side-muted:#9DA693; --side-line:#43503F;
+  --active:#F3C9D1; --active-ink:#2E3A2B;
+  --pink:#F4D0D6; --pink-d:#E8A9B6; --sage:#E0E6BF; --sage-d:#C3CD86;
+  --tan:#ECE1CF; --tan-d:#D8C4A5; --olive:#CBD495; --olive-d:#9AAA5E;
+  --green:#4F6B3B; --green-ink:#FFFFFF; --red:#C0566B;
+  --shadow:0 1px 2px rgba(60,50,30,.05),0 6px 20px rgba(60,50,30,.05);
+  --r:18px;
+  --serif:'Fraunces',Georgia,serif; --sans:'Space Grotesk',system-ui,-apple-system,sans-serif; --side-font:'Manrope',system-ui,sans-serif; --mono:'DM Mono',ui-monospace,monospace;
+  /* type scale: the only sizes used */
+  --fs-display:44px; --fs-h2:20px; --fs-num:40px; --fs-body:14px; --fs-sm:13px; --fs-xs:11px;
+}
+[data-theme="dark"]{
+  --bg:#1B1F19; --panel:#21261F; --card:#262C23; --line:#353C31; --line2:#2E352B;
+  --ink:#F0EEE6; --ink2:#D4D1C6; --muted:#9A9789;
+  --side:#141812; --side-line:#2A3127;
+  --pink:#5A3B41; --pink-d:#7D4D57; --sage:#434A2E; --sage-d:#5C6538;
+  --tan:#4A4234; --tan-d:#635843; --olive:#4A5230; --olive-d:#66733D;
+  --active:#E7B9C3; --shadow:0 1px 2px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit;font-size:inherit;color:var(--ink)}
+svg.i{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.serif{font-family:var(--serif)}
+
+/* layout */
+.app{display:grid;grid-template-columns:252px 1fr;min-height:100vh;padding:16px;gap:16px}
+.side{background:var(--side);color:var(--side-ink);border-radius:24px;padding:18px 14px;display:flex;flex-direction:column;position:sticky;top:16px;height:calc(100vh - 32px)}
+.acct{display:flex;align-items:center;gap:10px;padding:6px 8px 18px}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--sage-d);color:#2E3A2B;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.acct b{display:block;font-size:15px}
+.acct span{font-size:12px;color:var(--side-muted)}
+.li-badge{margin-left:auto;background:#0A66C2;color:#fff;font-weight:700;font-size:11px;border-radius:5px;padding:2px 5px}
+.grp{font-size:11.5px;color:var(--side-muted);padding:10px 10px 6px;letter-spacing:.02em}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:12px;text-decoration:none;color:var(--side-ink);font-weight:500;margin-bottom:2px;transition:background .15s}
+.nav a:hover{background:rgba(255,255,255,.06)}
+.nav a.on{background:var(--active);color:var(--active-ink)}
+.nav .cnt{margin-left:auto;font-size:11px;background:var(--sage-d);color:#2E3A2B;border-radius:8px;padding:1px 7px;font-weight:600}
+.nav .tag{margin-left:auto;font-size:10.5px;border:1px solid var(--side-line);color:var(--side-muted);border-radius:8px;padding:1px 6px}
+.nav a.on .tag{border-color:rgba(46,58,43,.3);color:var(--active-ink)}
+.divider{height:1px;background:var(--side-line);margin:10px 10px}
+.side-foot{margin-top:auto}
+.main{background:var(--panel);border-radius:24px;min-width:0;padding:20px 32px 48px;border:1px solid var(--line2)}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:10px;margin-bottom:26px}
+.search{position:relative;flex:0 1 360px}
+.search input{width:100%;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:10px 54px 10px 38px;outline:none}
+.search input:focus{border-color:var(--sage-d)}
+.search .i{position:absolute;left:12px;top:11px;color:var(--muted)}
+.kbd{position:absolute;right:10px;top:8px;font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:2px 6px;background:var(--panel)}
+.results{position:absolute;top:46px;left:0;right:-120px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);z-index:40;max-height:420px;overflow:auto;display:none}
+.results.show{display:block}
+.res{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line2);cursor:pointer}
+.res:hover{background:var(--panel)}
+.res small{color:var(--muted);display:block}
+.top .sp{flex:1}
+.iconbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;position:relative}
+.iconbtn:hover{border-color:var(--tan-d)}
+.dot{position:absolute;top:8px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--red);border:2px solid var(--card)}
+.pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;font-size:12.5px;white-space:nowrap}
+.pill .live{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.pill button{border:0;background:none;padding:0;display:flex;color:var(--muted)}
+.spin{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.me{width:40px;height:40px;border-radius:50%;background:var(--pink);display:grid;place-items:center;font-weight:600;color:#7a3445}
+.dropdown{position:absolute;top:50px;right:0;width:340px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);z-index:40;display:none;padding:6px}
+.dropdown.show{display:block}
+.note-row{display:flex;gap:10px;padding:10px;border-radius:10px;cursor:pointer;text-align:left}
+.note-row:hover{background:var(--panel)}
+.note-row .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none}
+
+/* headings */
+.h1{font-family:var(--serif);font-weight:500;font-size:44px;line-height:1.05;margin:0 0 8px;letter-spacing:-.01em}
+.sub{color:var(--muted);max-width:620px;margin:0}
+.head{display:flex;align-items:flex-end;gap:16px;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap}
+.head .acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.h2{font-family:var(--serif);font-weight:500;font-size:20px;margin:0}
+.lbl{font-size:12px;color:var(--muted)}
+
+/* controls */
+.seg{display:inline-flex;background:var(--line2);border-radius:999px;padding:3px}
+.seg button{border:0;background:none;padding:7px 14px;border-radius:999px;color:var(--muted);font-size:12.5px}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 15px;font-size:12.5px;display:inline-flex;align-items:center;gap:7px;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--tan-d)}
+.btn.primary{background:var(--green);border-color:var(--green);color:var(--green-ink)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.dark{background:#2A2A24;border-color:#2A2A24;color:#fff}
+.btn.sm{padding:5px 11px;font-size:12px}
+.btn .i{width:15px;height:15px}
+select.sel{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:12.5px;outline:none}
+.input{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 12px;outline:none;width:100%}
+.input:focus{border-color:var(--sage-d)}
+
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);min-width:0}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.split{grid-template-columns:minmax(0,1.75fr) minmax(0,1fr)}
+.mt{margin-top:16px}.mt2{margin-top:28px}
+
+.stat{position:relative;overflow:hidden;border-radius:var(--r);padding:20px 22px;min-height:136px;border:1px solid rgba(0,0,0,.03)}
+.stat .blob{position:absolute;top:-22px;right:-20px;width:112px;height:112px;opacity:.95}
+.stat .sic{position:absolute;top:18px;right:18px;color:var(--ink2)}
+.stat .lab{font-size:13px;color:var(--ink2);max-width:70%}
+.stat .num{font-family:var(--serif);font-size:40px;font-weight:500;line-height:1.1;margin:10px 0 6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stat .meta{font-size:12px;color:var(--ink2);opacity:.8}
+.delta{font-family:var(--sans);font-size:11.5px;font-weight:600;background:rgba(255,255,255,.6);border-radius:999px;padding:3px 9px;color:var(--ink2)}
+[data-theme="dark"] .delta{background:rgba(0,0,0,.25)}
+.delta.up{color:#3F6A2C}.delta.down{color:#A23E55}
+[data-theme="dark"] .delta.up{color:#B7D78F}[data-theme="dark"] .delta.down{color:#F0A3B4}
+.c-pink{background:var(--pink)}.c-sage{background:var(--sage)}.c-tan{background:var(--tan)}.c-olive{background:var(--olive)}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:11.5px;color:var(--muted);font-weight:500;text-align:left;padding:0 10px 10px;border-bottom:1px solid var(--line2)}
+.tbl td{padding:11px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl .r{text-align:right}
+.tbl tbody tr{cursor:default}
+.tbl tbody tr:hover td{background:rgba(0,0,0,.015)}
+.cell{display:flex;align-items:center;gap:11px;min-width:0}
+.cell b{font-weight:500;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbl td.c1{max-width:0;width:58%}
+.tbl td.one{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cell>div{min-width:0;overflow:hidden}
+.cell small{color:var(--muted)}
+.thumb{width:38px;height:38px;border-radius:9px;flex:none;overflow:hidden}
+.tag2{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;padding:3px 10px;border-radius:999px;background:var(--line2);white-space:nowrap}
+.tag2 i{width:7px;height:7px;border-radius:50%;display:inline-block}
+
+/* insight list */
+.ins{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line2)}
+.ins:last-child{border-bottom:0}
+.ins .ck{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex:none}
+.ins b{display:block;font-weight:600;margin-bottom:3px}
+.ins p{margin:0;color:var(--ink2);font-size:13px}
+.count{font-size:12px;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--line2);color:var(--ink2)}
+
+/* placeholders (swap for your own images later) */
+.ph{position:relative;overflow:hidden;width:100%;height:100%}
+.ph0{background:radial-gradient(circle at 25% 30%,var(--pink-d) 0 22%,transparent 23%),radial-gradient(circle at 78% 72%,var(--sage-d) 0 30%,transparent 31%),var(--pink)}
+.ph1{background:radial-gradient(ellipse at 70% 20%,var(--olive-d) 0 26%,transparent 27%),radial-gradient(circle at 20% 85%,var(--tan-d) 0 24%,transparent 25%),var(--sage)}
+.ph2{background:repeating-linear-gradient(135deg,var(--tan) 0 14px,var(--tan-d) 14px 16px)}
+.ph3{background:radial-gradient(circle at 50% 120%,var(--pink-d) 0 45%,transparent 46%),radial-gradient(circle at 80% 18%,var(--olive) 0 14%,transparent 15%),var(--tan)}
+.ph4{background:radial-gradient(circle,var(--sage-d) 2.2px,transparent 2.6px) 0 0/16px 16px,var(--olive)}
+.ph .phl{position:absolute;left:12px;bottom:10px;font-family:var(--serif);font-size:13px;color:rgba(42,42,36,.65)}
+
+/* saved posts */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.pc{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:transform .15s}
+.pc:hover{transform:translateY(-2px)}
+.pc .img{height:150px;position:relative}
+.pc .img img{width:100%;height:100%;object-fit:cover;display:block}
+.pc .cat{position:absolute;top:10px;left:10px;font-size:11px;font-weight:600;background:rgba(255,252,246,.9);color:#2A2A24;border-radius:999px;padding:3px 9px}
+.pc .bd{padding:14px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
+.who{display:flex;align-items:center;gap:8px;font-size:12.5px}
+.who .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;font-weight:700;background:var(--tan);color:#5b4a33;flex:none}
+.who small{color:var(--muted);display:block;font-size:11.5px}
+.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:var(--ink2);font-size:13px}
+.notebox{background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:9px 11px;font-size:12.5px;color:var(--ink2);cursor:text;min-height:38px}
+.notebox.empty{color:var(--muted)}
+.notebox textarea{width:100%;border:0;background:none;outline:none;resize:vertical;min-height:54px;padding:0}
+.pc .ft{display:flex;gap:6px;align-items:center;margin-top:auto;flex-wrap:wrap}
+.pc .ft select{flex:1;min-width:0}
+.folders{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.folder{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px;cursor:pointer;box-shadow:var(--shadow);transition:transform .15s;text-align:left}
+.folder:hover{transform:translateY(-2px)}
+.mosaic{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:4px;height:120px;border-radius:12px;overflow:hidden;margin-bottom:12px}
+.mosaic>div:first-child{grid-row:span 2}
+.folder b{font-family:var(--serif);font-weight:500;font-size:18px}
+select.sel,select.input{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;padding-right:36px!important;padding-left:14px}
+.c-pink{--boxc:var(--pink)}.c-sage{--boxc:var(--sage)}.c-tan{--boxc:var(--tan)}.c-olive{--boxc:var(--olive)}
+.stat .delta,.chart-delta .delta{background:color-mix(in srgb,var(--boxc) 45%,white)!important;color:inherit!important;border:1px solid color-mix(in srgb,var(--boxc) 70%,black)!important}
+.chart-delta{--boxc:var(--pink);color:var(--ink)}
+.stat .delta,.chart-delta .delta{display:inline-flex;align-items:center;justify-content:flex-start;min-width:0;box-sizing:border-box;padding:4px 8px}
+.delta .ar{font-style:normal;margin-right:2px}
+body.pill-base .stat .num{display:block}body.pill-base .stat .num .delta{display:inline-block;overflow:hidden;vertical-align:baseline;margin:0 0 0 10px;line-height:1}
+body.pill-top .stat .num{align-items:flex-start}body.pill-top .stat .num .delta{margin-top:5px}
+body.pill-below .stat .num{flex-direction:column;align-items:flex-start;gap:10px}
+body .pc .bd{background-image:none!important}
+.pc .ft{display:grid;grid-template-columns:1fr;gap:8px}.pc .ft select,.pc .ft .btn{width:100%;justify-content:center}
+body.pc-white .pc .bd{background-color:#FFFFFF}
+body.pc-blue .pc .bd{background-color:var(--blueish,var(--sage))}
+body.pc-alt .pc:nth-child(3n+1) .bd{background-color:var(--pink)}body.pc-alt .pc:nth-child(3n+2) .bd{background-color:var(--sage)}body.pc-alt .pc:nth-child(3n) .bd{background-color:var(--olive)}
+body.pc-alt .pc .notebox,body.pc-blue .pc .notebox{background:color-mix(in srgb,#FFFFFF 55%,transparent)}
+.ins.hl{align-items:center;cursor:pointer;border-radius:12px;margin:0 -10px;padding-left:10px;padding-right:10px;transition:background .15s}.ins.hl:hover,.ins.hl:focus-visible{background:var(--line2);outline:none}.ins.hl .go{flex:none;font-size:16px;color:var(--muted);transition:transform .15s,color .15s}.ins.hl:hover .go{color:var(--ink);transform:translate(2px,-2px)}.ins.hl:hover b{text-decoration:underline;text-underline-offset:3px}.ins.hl .tag2{min-width:0;height:28px;justify-content:flex-end;padding:0 10px;flex:none;margin-left:auto}.ins.hl .ck{width:var(--hlh,44px);height:var(--hlh,44px);border-radius:11px}
+.head .sub{width:fit-content;max-width:820px;margin-top:6px}
+body.sub-pill .head .sub{background:var(--card);border:1px solid var(--line);padding:7px 16px;border-radius:999px}
+body.sub-soft .head .sub{background:var(--card);padding:4px 10px;border-radius:6px;margin-left:-10px}
+body.sub-monobox .head .sub{font-family:var(--mono);font-size:12px;letter-spacing:.02em;background:var(--card);padding:5px 10px;border-radius:4px;border:1px solid var(--line);margin-left:-10px}
+body.sub-mono .head .sub{font-family:var(--mono);font-size:12px;letter-spacing:.02em;text-transform:uppercase;background:var(--bg);padding:2px 0;box-shadow:6px 0 0 var(--bg),-6px 0 0 var(--bg)}
+body.sub-tint .head .sub{background:color-mix(in srgb,var(--pink) 55%,var(--card));padding:4px 10px;border-radius:4px;margin-left:-10px}
+body.sub-none .head .sub{display:none}
+.folder.new{display:grid;place-items:center;border-style:dashed;color:var(--muted);min-height:180px;background:transparent;box-shadow:none}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-size:13px;margin-bottom:10px;border:0;background:none;padding:0}
+.empty-state{border:1px dashed var(--line);border-radius:var(--r);padding:28px;text-align:center;color:var(--muted)}
+
+/* substack */
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.sc{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
+.sc .ttl{font-family:var(--serif);font-size:20px;line-height:1.25;font-weight:500;margin:0}
+.sc .ttl a{text-decoration:none}
+.sc .ttl a:hover{text-decoration:underline}
+.sc .ex{color:var(--ink2);font-size:13px;margin:0}
+.sc .ft{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+.wav{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-weight:700;color:#5b2b35;flex:none}
+
+/* kanban */
+.kan{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(250px,1fr);gap:12px;overflow-x:auto;padding-bottom:6px}
+.col{background:var(--line2);border-radius:16px;padding:10px;min-height:260px}
+.col-h{display:flex;align-items:center;gap:8px;padding:4px 6px 10px;font-size:12.5px;font-weight:600}
+.col-h .n{margin-left:auto;color:var(--muted);font-weight:500}
+.col-h button{border:0;background:var(--card);border-radius:8px;width:24px;height:24px;display:grid;place-items:center}
+.kc{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.03);cursor:pointer}
+.kc:hover{border-color:var(--tan-d)}
+.kc b{font-weight:500;display:block;margin-bottom:6px;font-size:13px}
+.kc .m{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--muted);gap:8px}
+.kc .lnk{font-size:11.5px;color:var(--green);text-decoration:none;display:inline-flex;gap:4px;align-items:center;margin-top:6px;word-break:break-all}
+[data-theme="dark"] .kc .lnk{color:var(--sage-d)}
+.kc .nt{font-size:12px;color:var(--ink2);background:var(--panel);border-radius:8px;padding:6px 8px;margin-top:8px}
+.nothing{color:var(--muted);text-align:center;font-size:12.5px;padding:30px 0}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border:1px solid var(--line2);border-radius:14px;overflow:hidden}
+.cal .dh{background:var(--line2);font-size:11.5px;color:var(--muted);padding:8px 10px}
+.cal .d{min-height:104px;border-top:1px solid var(--line2);border-left:1px solid var(--line2);padding:7px;font-size:12px}
+.cal .d:nth-child(7n+1){border-left:0}
+.cal .d.out{background:rgba(0,0,0,.025);color:var(--muted)}
+.cal .d .dn{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:7px;font-size:11.5px;margin-bottom:4px}
+.cal .d.today .dn{background:var(--green);color:#fff}
+.ev{display:block;font-size:11px;padding:3px 7px;border-radius:6px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid;cursor:pointer;text-align:left;width:100%;border-top:0;border-right:0;border-bottom:0}
+
+/* trending */
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--line2);border-radius:12px;padding:7px 8px 7px 12px;font-size:12.5px}
+.chip b{font-weight:600}
+.chip .x{border:0;background:none;color:var(--muted);padding:0 4px;font-size:15px;line-height:1}
+.chip.paused{opacity:.45}
+.ig{font-size:10.5px;font-weight:700;border-radius:6px;padding:2px 6px;background:#E1306C;color:#fff}
+.lin{font-size:10.5px;font-weight:700;border-radius:6px;padding:2px 6px;background:#0A66C2;color:#fff}
+.tc{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
+.hot{display:inline-flex;gap:5px;align-items:center;font-size:11.5px;font-weight:600;border-radius:999px;padding:3px 10px;background:var(--pink);color:#8a3348}
+.fit{background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;font-size:12.5px;color:var(--ink2)}
+.hook{background:var(--line2);border-radius:12px;padding:10px 12px;font-size:13px;font-style:italic;color:var(--ink2)}
+.feed-row{display:flex;align-items:center;gap:14px;padding:12px 6px;border-bottom:1px solid var(--line2)}
+.feed-row:last-child{border-bottom:0}
+.feed-row .thumb{width:52px;height:52px;border-radius:12px}
+.feed-row .tx{flex:1;min-width:0}
+.feed-row .tx b{font-weight:600}
+.feed-row .tx p{margin:2px 0 0;color:var(--ink2);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feed-row .when{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.daylabel{font-size:11.5px;color:var(--muted);padding:14px 6px 4px;text-transform:uppercase;letter-spacing:.05em}
+
+/* settings */
+.set-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line2)}
+.set-row:last-child{border-bottom:0}
+.set-row .grow{flex:1;min-width:0}
+.prompt{background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:14px;font-size:12.5px;white-space:pre-wrap;max-height:280px;overflow:auto;font-family:ui-monospace,Menlo,monospace;color:var(--ink2)}
+.rot{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.rot .day{background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:10px;font-size:12px}
+.rot .day.today{border-color:var(--green)}
+.rot .day b{display:block;margin-bottom:6px;font-size:12.5px}
+
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(30,30,24,.35);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+.scrim.show{display:flex}
+.modal{background:var(--card);border-radius:22px;padding:24px;width:min(460px,100%);box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal h3{font-family:var(--serif);font-weight:500;font-size:24px;margin:0 0 6px}
+.modal .f{margin-top:12px}
+.modal .f label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.modal .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:9px 13px;font-size:13px}
+.opt.on{background:var(--green);color:#fff;border-color:var(--green)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#2A2A24;color:#fff;border-radius:999px;padding:10px 18px;font-size:13px;opacity:0;transition:.25s;z-index:70;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.banner{display:flex;align-items:center;gap:10px;background:var(--sage);border-radius:14px;padding:10px 14px;font-size:12.5px;color:var(--ink2);margin-bottom:18px}
+.banner button{margin-left:auto;border:0;background:none;color:var(--muted)}
+
+/* login */
+.login{position:fixed;inset:0;background:var(--bg);z-index:80;display:grid;place-items:center}
+.login .box{background:var(--card);border-radius:28px;padding:36px;width:min(400px,92vw);box-shadow:0 20px 60px rgba(60,50,30,.12);border:1px solid var(--line)}
+.login .logo{width:44px;height:44px;border-radius:13px;background:var(--green);display:grid;place-items:center;color:#fff;margin-bottom:22px}
+.gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:12px;font-weight:600;margin-top:22px}
+.gbtn:hover{border-color:var(--tan-d)}
+
+/* chart */
+.chart-tip{position:absolute;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:11.5px;box-shadow:var(--shadow);white-space:nowrap;display:none;z-index:5}
+.legend{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:6px}
+
+
+/* ===== type system + alignment ===== */
+body{font-size:var(--fs-body)}
+.h1{font-size:var(--fs-display);letter-spacing:-.03em;line-height:1;margin:0 0 4px;text-wrap:balance}
+.h2,.sc .ttl,.folder b,.modal h3{letter-spacing:-.025em}
+.h2{font-size:var(--fs-h2);line-height:1.2}
+.stat .num,.serif{letter-spacing:-.01em}
+.sub{font-size:var(--fs-body);max-width:720px;line-height:1.55;text-wrap:pretty}
+.side,.side *{font-family:var(--side-font)}
+.nav a{font-size:var(--fs-sm);font-weight:500}
+.nav .cnt{font-size:var(--fs-xs)}
+.lbl,.stat .meta,.cell small,.who small,.feed-row .when,.legend{font-size:var(--fs-sm)}
+.grp,.tbl th,.stat .lab,.kbd,.seg button,.pill,.tag2,.count,.daylabel,.lbl.mono{font-family:var(--mono);font-size:var(--fs-xs);letter-spacing:.03em;text-transform:uppercase}
+.stat{display:flex;flex-direction:column;min-height:0}
+.stat .lab{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 40px)}
+.stat .num{font-size:var(--fs-num);line-height:1;margin:14px 0 10px;display:flex;align-items:center;gap:10px}
+.stat .meta{line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.8em;text-wrap:pretty}
+.delta{font-family:var(--mono)!important;font-size:var(--fs-xs)!important;font-weight:500;letter-spacing:.02em;background:var(--card)!important;color:var(--ink)!important;border-radius:999px;padding:4px 9px;line-height:1;white-space:nowrap}
+.delta{border:1px solid var(--line)}
+.banner{color:var(--on2,var(--ink2))}
+.tc>div:last-child{margin-top:auto;padding-top:4px}
+.kc .lnk{display:flex;margin-top:8px}
+.folder.new{background:var(--card)!important;box-shadow:var(--shadow)}
+.kc .nt{display:block;margin-top:10px;background:var(--line2);border:1px solid var(--line);border-radius:10px;padding:7px 10px;font-size:var(--fs-sm);line-height:1.4;color:var(--ink)}
+.btn{font-size:var(--fs-sm)}
+.card{padding:22px}.card-h{margin-bottom:16px}.grid{gap:18px}.mt{margin-top:18px}.mt2{margin-top:32px}
+.head{margin-bottom:26px;gap:20px}
+.ins p,.clamp,.sc .ex,.fit,.feed-row .tx p{text-wrap:pretty}
+
+@media (max-width:1180px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.split{grid-template-columns:1fr}}
+
+/* change-indicator style options */
+.stat .meta .dmeta{display:none}
+body.ch-text .stat .num .delta,body.ch-sup .stat .num .delta,body.ch-mark .stat .num .delta{background:none!important;border:0!important;border-radius:0;padding:0!important;overflow:visible;display:inline;margin-left:12px;font-size:13px!important;color:var(--ink)!important}
+body.ch-sup .stat .num .delta{vertical-align:text-top;font-size:12px!important;margin-left:6px}
+body.ch-mark .stat .num .delta{background:linear-gradient(transparent 50%,color-mix(in srgb,var(--boxc) 25%,white) 50%)!important;padding:0 3px!important}
+body.ch-meta .stat .num .delta,body.ch-none .stat .num .delta{display:none}
+body.ch-meta .stat .meta .dmeta{display:inline}
+body.ch-meta .stat .meta .dmeta .delta{background:none!important;border:0!important;padding:0!important;min-width:0;display:inline;font-size:inherit!important;font-family:inherit!important;letter-spacing:0;font-weight:600;color:var(--ink)!important;margin-right:5px}
+
+.tbl tr.plink{cursor:pointer}.tbl tr.plink:hover td,.tbl tr.plink:focus-visible td{background:var(--line2)}.tbl tr.plink:focus-visible{outline:none}
+.tbl tr.plink td:first-child{border-radius:10px 0 0 10px}.tbl tr.plink td:last-child{border-radius:0 10px 10px 0}
+.tbl .gocell{width:28px;padding-left:4px;padding-right:8px}.tbl .go{font-size:16px;color:var(--muted);display:inline-block;transition:transform .15s,color .15s}
+.tbl tr.plink:hover .go{color:var(--ink);transform:translate(2px,-2px)}.tbl tr.plink:hover .cell b{text-decoration:underline;text-underline-offset:3px}
+
+/* ===== textures and badges ===== */
+.li-badge{display:none!important}
+.stat .blob{display:none!important}
+.nav .cnt,.avatar{background:var(--badge)!important;color:var(--badge-ink)!important}
+body.grain.gridbg .main{background-image:linear-gradient(var(--gridc) 1px,transparent 1px),linear-gradient(90deg,var(--gridc) 1px,transparent 1px),url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='matrix' values='.2 .2 .2 0 .2  .2 .2 .2 0 .2  .2 .2 .2 0 .2  0 0 0 0 1'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");background-blend-mode:normal,normal,overlay;background-size:22px 22px,22px 22px,220px 220px}
+.stat .lab,.stat .meta,.stat .sic{color:inherit}
+.stat .meta{opacity:.85}
+.c-pink{color:var(--on1)}.c-sage{color:var(--on2)}.c-tan{color:var(--on3)}.c-olive{color:var(--on4)}
+body.grain .stat,body.grain .card,body.grain .side,body.grain .main,body.grain .pc .bd,body.grain .sc,body.grain .tc,body.grain .folder,body.grain .kc,body.grain .banner{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='matrix' values='.2 .2 .2 0 .2  .2 .2 .2 0 .2  .2 .2 .2 0 .2  0 0 0 0 1'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");background-blend-mode:overlay;background-size:220px 220px}
+body.grain{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='matrix' values='.2 .2 .2 0 .2  .2 .2 .2 0 .2  .2 .2 .2 0 .2  0 0 0 0 1'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");background-blend-mode:overlay;background-size:220px 220px}
+body.gridbg .main{background-image:linear-gradient(var(--gridc) 1px,transparent 1px),linear-gradient(90deg,var(--gridc) 1px,transparent 1px);background-size:22px 22px}
+
+/* ===== palettes (switch in Settings) ===== */
+html[data-palette="plm"]{--bg: #FDFCFA; --panel: #FDFCFA; --card: #FDFCFA; --line: color-mix(in srgb, #2A2827 16%, transparent); --line2: color-mix(in srgb, #2A2827 8%, #FDFCFA); --gridc: color-mix(in srgb, #2A2827 5%, transparent); --ink: #2A2827; --ink2: #2A2827; --muted: color-mix(in srgb, #2A2827 62%, transparent); --side: #262524; --side-ink: #FDFCFA; --side-muted: color-mix(in srgb, #FDFCFA 62%, transparent); --side-line: color-mix(in srgb, #FDFCFA 18%, transparent); --active: #FDDAE0; --active-ink: #2A2827; --pink: #FDDAE0; --pink-d: #FDDAE0; --on1: #2A2827; --sage: #D3ECF0; --sage-d: #D3ECF0; --on2: #2A2827; --tan: #D2E1B7; --tan-d: #D2E1B7; --on3: #2A2827; --olive: #FEF4B3; --olive-d: #FEF4B3; --on4: #2A2827; --badge: #FDDAE0; --badge-ink: #2A2827; --blueish: #D3ECF0; --green: #262524; --green-ink: #FDFCFA; --red: #393736;}
+html[data-palette="matcha"]{--bg: #FDFCFA; --panel: #FDFCFA; --card: #FDFCFA; --line: color-mix(in srgb, #03261F 16%, transparent); --line2: color-mix(in srgb, #03261F 8%, #FDFCFA); --gridc: color-mix(in srgb, #03261F 5%, transparent); --ink: #03261F; --ink2: #03261F; --muted: color-mix(in srgb, #03261F 62%, transparent); --side: #03261F; --side-ink: #FDFCFA; --side-muted: color-mix(in srgb, #FDFCFA 62%, transparent); --side-line: color-mix(in srgb, #FDFCFA 18%, transparent); --active: #89C9C9; --active-ink: #03261F; --pink: #89C9C9; --pink-d: #89C9C9; --on1: #03261F; --sage: #DBFC93; --sage-d: #DBFC93; --on2: #03261F; --tan: #03261F; --tan-d: #03261F; --on3: #FDFCFA; --olive: #89C9C9; --olive-d: #89C9C9; --on4: #03261F; --badge: #89C9C9; --badge-ink: #03261F; --blueish: #89C9C9; --green: #03261F; --green-ink: #FDFCFA; --red: #03261F;}
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body class="sub-none pill-base ch-meta pc-white grain gridbg">
+
+<!-- Sign-in screen -->
+<div class="login" id="login" style="display:none">
+  <div class="box">
+    <div class="logo"><svg class="i" viewBox="0 0 24 24"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></div>
+    <div class="lbl">Sahla's Command Center</div>
+    <h2 class="h1" style="font-size:34px;margin-top:6px">Welcome back</h2>
+    <p class="sub">Sign in with your Google account to open your dashboard. Only your account can see your data.</p>
+    <button class="gbtn" id="gsign"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Sign in with Google</button>
+    <p class="lbl" id="loginMsg" style="text-align:center;margin-top:16px">Only your Google account can open this dashboard.</p>
+  </div>
+</div>
+
+<div class="app">
+  <aside class="side">
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot nav">
+      <div class="divider"></div>
+      <a href="#settings" data-p="settings"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</a>
+      <a href="#" id="signout"><svg class="i" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sign out</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div class="search">
+        <svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="q" placeholder="Search anything..." autocomplete="off">
+        <span class="kbd">⌘K</span>
+        <div class="results" id="results"></div>
+      </div>
+      <div class="sp"></div>
+      <span class="pill" id="sync"><span class="live"></span><span id="synctext"></span><button id="syncbtn" title="Refresh from your sheet"><svg class="i" viewBox="0 0 24 24" style="width:15px;height:15px"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg></button></span>
+      <div style="position:relative">
+        <button class="iconbtn" id="bell" title="Notifications"><svg class="i" viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="dot" id="belldot"></span></button>
+        <div class="dropdown" id="notes"></div>
+      </div>
+      <div class="me">S</div>
+    </div>
+    <div id="page"></div>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   LIVE DATA
+   Nothing personal lives in this file. After you sign in with Google,
+   the site reads your "LinkedIn Post Tracker" sheet and fills DATA.
+   ===================================================================== */
+const CONFIG={
+  clientId:"1023197034381-evoc22b2t9lkd2qtuuuishu1vk37enas.apps.googleusercontent.com",
+  sheetId:"1a0ye79pwT1fn2bz7fJXFUyHdEg4Ygycfk4FU3P3OWfw",
+  scope:"https://www.googleapis.com/auth/spreadsheets"
+};
+const DAY=864e5;
+const TODAY=(()=>{const d=new Date();d.setHours(0,0,0,0);return d})();
+const SECTIONS_DEFAULT=["S1 Playbook","S2 Frameworks","S3 Lab","S4 Observatory"];
+const DATA={
+  dataAsOf:TODAY, postingGoalPerWeek:2, posts:[], followers:[],
+  insights:{writtenOn:"",working:[],notWorking:[]},
+  savedFolders:["Playbooks","GTM","Marketing"], saved:[], substack:[],
+  bankSections:SECTIONS_DEFAULT.slice(), bank:[], draftsPerSeries:[],
+  stages:["Idea","Researching","Drafted","Designed","Scheduled","Posted"], pipeline:[],
+  trend:{scraped:"",hashtags:[],suggested:[],topInstagram:{views:"–",cap:"Appears after the first weekly refresh"},topics:[]},
+  people:[], feed:[], synced:"not yet"
+};
+
+/* ---------- Google sign-in + Sheets API ---------- */
+let TOKEN=null,tokenClient=null;
+try{const t=JSON.parse(sessionStorage.getItem("scc-tok")||"null");if(t&&t.exp>Date.now()+60000)TOKEN=t}catch(e){}
+function tokenValid(){return TOKEN&&TOKEN.exp>Date.now()+60000}
+const qe=s=>encodeURIComponent(s);
+async function api(path,opts={}){
+  if(!tokenValid()){showLogin("Your sign-in expired. Sign in again to keep going.");throw new Error("auth")}
+  const r=await fetch("https://sheets.googleapis.com/v4/spreadsheets/"+CONFIG.sheetId+path,
+    Object.assign({},opts,{headers:{"Authorization":"Bearer "+TOKEN.t,"Content-Type":"application/json"}}));
+  if(r.status===401){TOKEN=null;try{sessionStorage.removeItem("scc-tok")}catch(e){}showLogin("Your sign-in expired. Sign in again to keep going.");throw new Error("auth")}
+  if(!r.ok){let m="";try{m=(await r.json()).error.message}catch(e){}throw new Error("Sheets "+r.status+" "+m)}
+  return r.json();
+}
+async function readTabs(tabs){
+  const p=tabs.map(t=>"ranges="+qe("'"+t+"'!A1:Z3000")).join("&");
+  const j=await api("/values:batchGet?"+p+"&valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=SERIAL_NUMBER");
+  return j.valueRanges.map(v=>v.values||[]);
+}
+function setMany(list){ // list of [range, value]
+  return api("/values:batchUpdate",{method:"POST",body:JSON.stringify({valueInputOption:"RAW",data:list.map(([range,v])=>({range,values:[[v]]}))})});
+}
+async function addRow(tab,row){
+  const j=await api("/values/"+qe("'"+tab+"'!A1")+":append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",{method:"POST",body:JSON.stringify({values:[row]})});
+  const m=String(j.updates&&j.updates.updatedRange||"").match(/![A-Z]+(\d+)/);return m?+m[1]:null;
+}
+function write(p,ok){return p.then(r=>{if(ok)toast(ok);return r}).catch(e=>{if(e.message!=="auth"){console.error(e);toast("Couldn't save to your sheet. Check your connection and try again.")}})}
+
+/* ---------- reading helpers ---------- */
+function rowsToObjs(values){
+  if(!values.length)return [];
+  const head=values[0].map(h=>String(h).trim());
+  return values.slice(1).map((r,i)=>{const o={_row:i+2};head.forEach((h,j)=>o[h]=r[j]===undefined?"":r[j]);return o});
+}
+function toDate(v){
+  if(v===""||v==null)return null;
+  if(typeof v==="number"){const d=new Date(1899,11,30+Math.floor(v));d.setMinutes(Math.round((v%1)*1440));return d}
+  const s=String(v).trim();const m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/);if(m)return new Date(+m[1],m[2]-1,+m[3],+(m[4]||0),+(m[5]||0));
+  const m2=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m2)return new Date(+m2[3],m2[2]-1,+m2[1]); // dd/mm/yyyy
+  const d=new Date(s);return isNaN(d)?null:d;
+}
+const num=v=>{const n=typeof v==="number"?v:parseFloat(String(v).replace(/[, ]/g,""));return isNaN(n)?0:n};
+const isoD=d=>d?d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"):"";
+const yes=v=>/^(yes|y|true|1)$/i.test(String(v).trim());
+function secFromCode(c){c=String(c||"");const m=c.match(/S\d/i);if(!m)return SECTIONS_DEFAULT[0];const code=m[0].toUpperCase();
+  return (ST.bankSections.find(s=>s.toUpperCase().startsWith(code))||SECTIONS_DEFAULT.find(s=>s.startsWith(code))||SECTIONS_DEFAULT[0])}
+const codeFromSec=s=>{const m=String(s).match(/^S\d/i);return m?m[0].toUpperCase():s};
+const WEEKDAYS=["Monday","Tuesday","Wednesday","Thursday","Friday"];
+function fmtStamp(d){return d?fd(d)+", "+d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):"not yet"}
+
+const TABS=["Analytics","Insights","Saved posts","Substack","Idea Bank","Post Pipeline","Engagement","People feed","Trending topics"];
+async function loadAll(){
+  const v=await readTabs(TABS);const [an,ins,sv,sub,idb,pp,eng,pf,tt]=v.map(rowsToObjs);
+
+  // Analytics -> posts
+  let lastSync=null;
+  DATA.posts=an.filter(r=>r["Posted on"]!==""&&(r["Title"]||r["Post URL"])).map((r,i)=>{
+    const ls=toDate(r["Last synced"]);if(ls&&(!lastSync||ls>lastSync))lastSync=ls;
+    const f=String(r["Format"]||"");
+    return {id:"P"+r._row,_row:r._row,title:String(r["Title"]||"Untitled post"),format:/carousel|document|pdf/i.test(f)?"Carousel":/video/i.test(f)?"Video":/image|photo/i.test(f)?"Image":(f||"Text"),
+      series:String(r["Series"]||""),date:toDate(r["Posted on"]),impressions:num(r["Impressions"]),reactions:num(r["Reactions"]),comments:num(r["Comments"]),
+      reposts:num(r["Reposts"]),saves:num(r["Saves"]),sends:num(r["Sends"]),url:String(r["Post URL"]||""),ph:i%5};
+  }).filter(p=>p.date);
+  DATA.synced=fmtStamp(lastSync);
+
+  // Insights -> working / not working, followers, hashtags, top reel
+  const typ=r=>String(r["Type"]||"").trim().toLowerCase();
+  const det=r=>String(r["Detail / value"]!==undefined?r["Detail / value"]:r["Value"]||"");
+  const ww=ins.filter(r=>typ(r)==="working"||typ(r)==="not working");
+  let wk=null;ww.forEach(r=>{const d=toDate(r["Week of"]);if(d&&(!wk||d>wk))wk=d});
+  const thisWeek=ww.filter(r=>!wk||+toDate(r["Week of"])===+wk);
+  DATA.insights={writtenOn:wk?fd(wk):"",working:thisWeek.filter(r=>typ(r)==="working").map(r=>({t:String(r["Text"]),d:det(r)})),
+    notWorking:thisWeek.filter(r=>typ(r)==="not working").map(r=>({t:String(r["Text"]),d:det(r)}))};
+  DATA.followers=ins.filter(r=>typ(r)==="followers").map(r=>({date:toDate(r["Week of"]),n:num(det(r))})).filter(f=>f.date).sort((a,b)=>a.date-b.date);
+  DATA.trend.hashtags=ins.filter(r=>typ(r)==="hashtag"&&!/removed/i.test(det(r))).map(r=>({tag:String(r["Text"]).replace(/^#/,""),views:"",_row:r._row,paused:/paused/i.test(det(r))}));
+  DATA.trend.suggested=ins.filter(r=>typ(r)==="suggested hashtag").map(r=>String(r["Text"]).replace(/^#/,"")).slice(0,6);
+  const reel=ins.filter(r=>typ(r)==="top reel").sort((a,b)=>num(b["Week of"])-num(a["Week of"]))[0];
+  if(reel)DATA.trend.topInstagram={views:det(reel)||"–",cap:String(reel["Text"]||"")};
+
+  // Saved posts
+  DATA.saved=sv.filter(r=>r["Post URL"]||r["First lines"]).map(r=>({id:"s"+r._row,_row:r._row,author:String(r["Author"]||"LinkedIn post"),role:"",
+    text:String(r["First lines"]||""),savedOn:isoD(toDate(r["Saved on"]))||isoD(TODAY),cat:String(r["Folder"]||""),note:String(r["Note"]||""),
+    img:String(r["Image URL"]||"")||null,url:String(r["Post URL"]||"")})).sort((a,b)=>b.savedOn.localeCompare(a.savedOn));
+
+  // Substack: one card per writer, newest first
+  const W={};
+  sub.forEach(r=>{const w=String(r["Writer"]||"").trim();if(!w)return;
+    W[w]=W[w]||{writer:w,by:"",feed:"",removed:false,rows:[],posts:[]};W[w].rows.push(r._row);
+    if(r["Feed URL"]&&!W[w].feed){W[w].feed=String(r["Feed URL"]);W[w].by=domain(W[w].feed)}
+    if(/removed/i.test(r["Status"]))W[w].removed=true;
+    if(r["Post URL"])W[w].posts.push({id:"b"+r._row,_row:r._row,title:String(r["Post title"]||"Untitled"),date:isoD(toDate(r["Published"]))||isoD(TODAY),ex:"",url:String(r["Post URL"]),read:/^read$/i.test(String(r["Status"]).trim())});
+  });
+  Object.values(W).forEach(w=>w.posts.sort((a,b)=>b.date.localeCompare(a.date)));
+  DATA.substack=Object.values(W).filter(w=>!w.removed);
+
+  // Idea Bank -> content bank
+  DATA.bank=idb.filter(r=>String(r["Idea"]).trim()&&!/archived/i.test(r["Status"])).map(r=>({id:"i"+r._row,_row:r._row,sec:secFromCode(r["Suggested series"]),
+    date:isoD(toDate(r["Date added"]))||isoD(TODAY),idea:String(r["Idea"]),link:String(r["Link"]||""),note:String(r["Why it's interesting"]||"")})).sort((a,b)=>b.date.localeCompare(a.date));
+
+  // Post Pipeline -> calendar
+  const stageOf=s=>DATA.stages.find(x=>x.toLowerCase()===String(s).trim().toLowerCase())||(String(s).trim()?"Idea":"Idea");
+  DATA.pipeline=pp.filter(r=>String(r["Post ID"]).trim()).map(r=>({id:String(r["Post ID"]),_row:r._row,title:String(r["Working title / hook"]||r["Post ID"]),
+    series:String(r["Series"]||""),stage:stageOf(r["Stage"]),due:isoD(toDate(r["Planned post date"])),url:String(r["Post URL"]||"")}));
+  DATA.draftsPerSeries=ST.bankSections.slice(0,4).map(s=>{const it=DATA.pipeline.filter(p=>p.series===s);
+    const drafted=it.filter(p=>["Drafted","Designed","Scheduled"].includes(p.stage)).length,designed=it.filter(p=>["Designed","Scheduled"].includes(p.stage)).length;
+    return {s,drafted,designed,status:drafted<5?`Draft ${5-drafted} more`:designed<2?`Design ${2-designed} more`:"On track"}});
+
+  // People you follow (Engagement tab, Track in dashboard = Yes)
+  DATA.people=eng.filter(r=>yes(r["Track in dashboard"])&&String(r["Name"]).trim()).map(r=>String(r["Name"]).trim());
+  DATA.feed=pf.filter(r=>r["Post URL"]).map((r,i)=>({id:"f"+r._row,_row:r._row,name:String(r["Name"]),group:String(r["Weekday group"]||""),url:String(r["Post URL"]),
+    text:String(r["First lines"]||""),posted:toDate(r["Posted"]),opened:yes(r["Opened"]),ph:i}));
+
+  // Trending topics: latest week only
+  let tw=null;tt.forEach(r=>{const d=toDate(r["Week of"]);if(d&&(!tw||d>tw))tw=d});
+  DATA.trend.scraped=tw?fd(tw):"not yet";
+  DATA.trend.topics=tt.filter(r=>r["Topic"]&&(!tw||+toDate(r["Week of"])===+tw)).map(r=>({_row:r._row,heat:String(r["Heat"]||"Steady"),name:String(r["Topic"]),
+    what:String(r["What's happening"]||""),tag:String(r["Hashtag"]||""),fit:String(r["Your fit"]||""),hook:String(r["Suggested hook"]||""),url:String(r["Example URL"]||"")}));
+
+  // hand over to the page state
+  ST.saved=DATA.saved;ST.bank=DATA.bank;ST.pipeline=DATA.pipeline;
+  ST.read=[];DATA.substack.forEach(w=>w.posts.forEach(p=>{if(p.read)ST.read.push(p.id)}));
+  ST.writers=DATA.substack.map(w=>w.writer);
+  ST.hashtags=DATA.trend.hashtags;ST.paused=DATA.trend.hashtags.filter(h=>h.paused).map(h=>h.tag);
+  ST.opened=[];ST.synced=DATA.synced;
+  DATA.saved.forEach(s=>{if(s.cat&&!ST.folders.includes(s.cat))ST.folders.push(s.cat)});
+}
+
+/* Weekly Claude prompt (for the free plan; a scheduled task does this on the paid plan) */
+const WEEKLY_PROMPT = `Weekly refresh for Sahla's Command Center.
+
+Use my Google Sheet "LinkedIn Post Tracker".
+
+1. WHAT'S WORKING
+Read the Analytics tab (all my posts with their numbers) and the Learnings tab.
+Write 3 "What's working" and 2 "What's not working" findings about my LinkedIn posts.
+Each finding: a short title (max 6 words) and 1 to 2 sentences that name the posts and the numbers it is based on.
+Treat any group with fewer than 3 posts as a hint, not a pattern, and say so.
+Add them to the "Insights" tab as new rows: Week of = this Monday's date (YYYY-MM-DD), Type = "Working" or "Not working", Text = the title, Detail / value = the sentences. Keep older weeks.
+
+2. TRENDING TOPICS
+Read the "Instagram raw" tab (this week's Instagram hashtag results).
+Group the posts into up to 6 topics. For each topic add a row to the "Trending topics" tab:
+Week of (this Monday, YYYY-MM-DD), Topic (max 6 words), Heat (Hot / Rising / Steady), What's happening (2 sentences, with numbers), Hashtag, Your fit (which of my series, drafts or Content bank ideas it connects to, by name), Suggested hook (one line in my voice: relatable creative strategist in B2B tech, no "comment X to get it"), Example URL (the top post).
+Also add one row to "Insights" with Type = "Top reel", Text = the top reel's caption (first 8 words), Detail / value = its views (like 412K).
+
+3. RULES
+Only add rows to the tabs named above. Don't change, move or delete anything else.
+Don't share the sheet or any link with anyone.
+If a number is missing, leave the cell empty and tell me which ones.
+
+When you're done, show me a short summary of what you wrote.`;
+
+/* ===================== STATE (screen settings stay in this browser; your data lives in the sheet) ===================== */
+const KEY="scc-live-v1";
+const UI_KEYS=["range","calView","calMonth","openFolder","topSort","bdSort","folders","bankSections","palette","current"];
+function freshState(){return {
+  range:30, theme:"light", calView:"month", calMonth:[TODAY.getFullYear(),TODAY.getMonth()], openFolder:null, bannerOff:true,
+  folders:DATA.savedFolders.slice(), saved:[], read:[], current:{}, bank:[], bankSections:SECTIONS_DEFAULT.slice(),
+  pipeline:[], hashtags:[], paused:[], opened:[], synced:"not yet", topSort:"impressions", bdSort:"impressions",
+  writers:[], palette:"plm", sheetLink:"https://docs.google.com/spreadsheets/d/"+CONFIG.sheetId+"/edit"
+}}
+let ST=freshState();
+try{const s=JSON.parse(localStorage.getItem(KEY)||"{}");UI_KEYS.forEach(k=>{if(s[k]!==undefined)ST[k]=s[k]})}catch(e){}
+function save(){try{const o={};UI_KEYS.forEach(k=>o[k]=ST[k]);localStorage.setItem(KEY,JSON.stringify(o))}catch(e){}}
+function setPalette(p){ST.palette=p==="matcha"?"matcha":"plm";document.documentElement.dataset.palette=ST.palette;save()}
+document.documentElement.dataset.palette=ST.palette==="matcha"?"matcha":"plm";
+
+/* ===================== HELPERS ===================== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const K=n=>n>=1e6?(n/1e6).toFixed(1).replace(/\.0$/,"")+"M":n>=1e3?(n/1e3).toFixed(1).replace(/\.0$/,"")+"K":String(Math.round(n));
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const fd=d=>{d=new Date(d);return MON[d.getMonth()]+" "+d.getDate()};
+const iso=d=>{d=new Date(d);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const parse=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const er=p=>(p.reactions+p.comments+p.reposts+p.saves+p.sends)/p.impressions;
+const pct=x=>(x*100).toFixed(1)+"%";
+const initials=n=>n.split(/[\s(]+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2200)}
+const ph=(i,label)=>`<div class="ph ph${i%5}">${label?`<span class="phl">${esc(label)}</span>`:""}</div>`;
+const domain=u=>{try{return new URL(u).hostname.replace("www.","")}catch(e){return u}};
+const STAGE_C={Idea:["#E4E0D6","#8C877B"],Researching:["#ECE1CF","#B89A6E"],Drafted:["#F4D0D6","#C9687E"],Designed:["#E0E6BF","#8FA055"],Scheduled:["#DCE6F0","#5D86AE"],Posted:["#D2DEC8","#4F6B3B"]};
+const SER_C={"S1 Playbook":"#C9687E","S2 Frameworks":"#B89A6E","S3 Lab":"#8FA055","S4 Observatory":"#5D86AE"};
+const serDot=s=>`<span class="tag2"><i style="background:${SER_C[s]||"#999"}"></i>${esc(s)}</span>`;
+const stagePill=s=>{const c=STAGE_C[s]||STAGE_C.Idea;return `<span class="tag2" style="background:${c[0]};color:#2A2A24"><i style="background:${c[1]}"></i>${esc(s)}</span>`};
+const BLOBS=[
+ '<path d="M60 4c22 0 46 12 46 38s-20 26-26 44-38 30-54 8S6 54 18 32 38 4 60 4z"/>',
+ '<path d="M56 2l9 17 19-6-2 20 19 6-14 14 12 16-20 3 1 20-18-9-11 16-8-18-19 5 3-20-19-7 15-13-11-17 20-2 0-20 18 9z"/>',
+ '<path d="M30 10c18-16 60-10 72 14s-2 52-28 62-58 2-68-22 6-38 24-54z"/>',
+ '<path d="M108 6C108 60 70 104 10 104 10 50 52 6 108 6z"/>'
+];
+function stat(color,blobIdx,blobColor,icon,label,num,delta,meta){
+  return `<div class="stat ${color}"><svg class="blob" viewBox="0 0 112 112" fill="${blobColor}">${BLOBS[blobIdx]}</svg>
+  <span class="sic">${ICON[icon]||""}</span><div class="lab">${label}</div>
+  <div class="num">${num}${delta||""}</div><div class="meta">${delta?`<span class="dmeta">${delta}</span>`:""}${meta||""}</div></div>`;
+}
+function deltaPill(cur,prev,mode){
+  if(prev==null||prev===0&&cur===0) return "";
+  if(mode==="pts"){const d=(cur-prev)*100;return `<span class="delta ${d>=0?"up":"down"}"><i class="ar">${d>=0?"↑":"↓"}</i>${Math.abs(d).toFixed(1)} pts</span>`}
+  if(mode==="abs"){const d=cur-prev;return `<span class="delta ${d>=0?"up":"down"}"><i class="ar">${d>=0?"↑":"↓"}</i>${Math.abs(d)}</span>`}
+  if(!prev) return "";
+  const d=(cur-prev)/prev*100;return `<span class="delta ${d>=0?"up":"down"}"><i class="ar">${d>=0?"↑":"↓"}</i>${Math.abs(d).toFixed(1)}%</span>`;
+}
+
+const ICON={
+ grid:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+ layers:'<svg class="i" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg>',
+ bookmark:'<svg class="i" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg>',
+ book:'<svg class="i" viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M8 7h7"/></svg>',
+ bulb:'<svg class="i" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z"/></svg>',
+ cal:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+ flame:'<svg class="i" viewBox="0 0 24 24"><path d="M12 3s5 4.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-4 1.5-4S9 12 11 12c0-4 1-9 1-9z"/></svg>',
+ eye:'<svg class="i" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+ heart:'<svg class="i" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg>',
+ users:'<svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6M17 4a4 4 0 0 1 0 8M22 21c0-3-2-5-4-5.5"/></svg>',
+ doc:'<svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>',
+ check:'<svg class="i" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg>',
+ x:'<svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+ dl:'<svg class="i" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>',
+ ext:'<svg class="i" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+ plus:'<svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+ send:'<svg class="i" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
+ refresh:'<svg class="i" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 4v5h-5"/></svg>',
+ cam:'<svg class="i" viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h2l2-2h6l2 2h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="4"/></svg>',
+ crown:'<svg class="i" viewBox="0 0 24 24"><path d="M3 18h18M4 8l4 4 4-7 4 7 4-4-1 10H5z"/></svg>',
+ star:'<svg class="i" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>',
+ msg:'<svg class="i" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z"/></svg>',
+ back:'<svg class="i" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>',
+ info:'<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
+ list:'<svg class="i" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>',
+ kan:'<svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="10" rx="1.5"/><rect x="17" y="4" width="4" height="13" rx="1.5"/></svg>',
+ trash:'<svg class="i" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>'
+};
+
+/* ===================== NAV ===================== */
+const NAV=[
+ {g:"Analytics"},
+ {p:"overview",t:"Overview",i:"grid"},
+ {p:"breakdown",t:"Breakdown",i:"layers"},
+ {div:1},
+ {g:"Strategy"},
+ {p:"saved",t:"Saved posts",i:"bookmark",cnt:()=>ST.saved.filter(s=>!s.cat).length||""},
+ {p:"substack",t:"Substack",i:"book",cnt:()=>unreadCount()||""},
+ {p:"bank",t:"Content bank",i:"bulb",cnt:()=>ST.bank.length},
+ {p:"calendar",t:"Content calendar",i:"cal"},
+ {p:"trending",t:"Trending topics",i:"flame"}
+];
+function renderNav(cur){
+  $("#nav").innerHTML=NAV.map(n=>{
+    if(n.g) return `<div class="grp">${n.g}</div>`;
+    if(n.div) return `<div class="divider"></div>`;
+    const c=n.cnt?n.cnt():"";
+    return `<a href="#${n.p}" data-p="${n.p}" class="${cur===n.p?"on":""}">${ICON[n.i]}${n.t}${c!==""?`<span class="cnt">${c}</span>`:""}${n.tag?`<span class="tag">${n.tag}</span>`:""}</a>`;
+  }).join("");
+  document.querySelectorAll('.side-foot a[data-p]').forEach(a=>a.classList.toggle("on",a.dataset.p===cur));
+}
+
+/* ===================== ANALYTICS MATH ===================== */
+function inRange(days,offset=0){
+  const end=new Date(+DATA.dataAsOf - offset*days*DAY), start=new Date(+end - days*DAY);
+  return DATA.posts.filter(p=>p.date>start&&p.date<=end);
+}
+function followersAt(d){if(!DATA.followers.length)return 0;let best=DATA.followers[0];for(const f of DATA.followers){if(f.date<=d)best=f}return best.n}
+function rangeStats(days){
+  const cur=inRange(days),prev=inRange(days,1);
+  const sum=a=>a.reduce((s,p)=>s+p.impressions,0);
+  const avgEr=a=>a.length?a.reduce((s,p)=>s+er(p),0)/a.length:0;
+  const end=DATA.dataAsOf,start=new Date(+end-days*DAY),pstart=new Date(+start-days*DAY);
+  const net=followersAt(end)-followersAt(start), pnet=followersAt(start)-followersAt(pstart);
+  return {cur,prev,imp:sum(cur),pimp:sum(prev),er:avgEr(cur),per:avgEr(prev),net,pnet,total:followersAt(end)};
+}
+function rangeHead(){
+  return `<div class="acts">
+    <span class="pill">${ICON.cal.replace('class="i"','class="i" style="width:15px;height:15px"')}Data as of ${fd(DATA.dataAsOf)}</span>
+    <div class="seg" id="rangeSeg">${[7,30,90].map(d=>`<button data-r="${d}" class="${ST.range===d?"on":""}">${d} days</button>`).join("")}</div>
+    <button class="btn primary" id="exportBtn">${ICON.dl}Export</button></div>`;
+}
+function bindRange(){
+  document.querySelectorAll("#rangeSeg button").forEach(b=>b.onclick=()=>{ST.range=+b.dataset.r;save();route()});
+  $("#exportBtn").onclick=exportCSV;
+}
+function exportCSV(){
+  const rows=[["Title","Posted","Series","Format","Impressions","Reactions","Comments","Reposts","Saves","Sends","Engagement rate"]];
+  inRange(ST.range).forEach(p=>rows.push([p.title,iso(p.date),p.series,p.format,p.impressions,p.reactions,p.comments,p.reposts,p.saves,p.sends,pct(er(p))]));
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download=`linkedin-posts-last-${ST.range}-days-${iso(DATA.dataAsOf)}.csv`;a.click();toast("Exported "+(rows.length-1)+" posts");
+}
+function sortPosts(a,mode){
+  const b=[...a];
+  if(mode==="latest")b.sort((x,y)=>y.date-x.date);
+  else if(mode==="er")b.sort((x,y)=>er(y)-er(x));
+  else b.sort((x,y)=>y.impressions-x.impressions);
+  return b;
+}
+function postTable(list,limit,selId,mode){
+  const rows=sortPosts(list,mode).slice(0,limit);
+  if(!rows.length) return `<div class="nothing">No posts in this period.</div>`;
+  return `<table class="tbl"><thead><tr><th>Content</th><th>Series</th><th>Format</th><th class="r">Impressions</th><th class="r">Eng.</th><th class="gocell"></th></tr></thead><tbody>${
+    rows.map((p,i)=>`<tr class="plink" role="link" tabindex="0" title="Open post on LinkedIn" data-url="${esc(p.url)}"><td class="c1"><div class="cell"><div class="thumb">${ph(p.ph)}</div><div style="min-width:0"><b title="${esc(p.title)}">${esc(p.title)}</b><small>#${i+1} · ${fd(p.date)}</small></div></div></td>
+    <td>${serDot(p.series)}</td><td><span class="lbl">${p.format}</span></td><td class="r"><b style="font-weight:600">${K(p.impressions)}</b></td><td class="r lbl">${pct(er(p))}</td><td class="r gocell"><span class="go" aria-hidden="true">↗</span></td></tr>`).join("")
+  }</tbody></table>`;
+}
+function sortSel(id,val){return `<select class="sel" id="${id}">${[["impressions","Most impressions"],["er","Best engagement"],["latest","Latest"]].map(o=>`<option value="${o[0]}" ${val===o[0]?"selected":""}>${o[1]}</option>`).join("")}</select>`}
+
+/* line chart */
+function lineChart(points){
+  const W=460,H=200,pl=36,pr=10,pt=12,pb=26;
+  const max=Math.max(...points.map(p=>p.v),10)*1.15;
+  const x=i=>pl+(points.length<2?0:i*(W-pl-pr)/(points.length-1));
+  const y=v=>pt+(H-pt-pb)*(1-v/max);
+  let d="";points.forEach((p,i)=>{d+=(i?" L":"M")+x(i).toFixed(1)+" "+y(p.v).toFixed(1)});
+  const area=d+` L${x(points.length-1)} ${H-pb} L${x(0)} ${H-pb} Z`;
+  const ticks=[0,.25,.5,.75,1].map(t=>max*t);
+  const every=Math.ceil(points.length/7);
+  return `<div style="position:relative" id="lc"><svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;overflow:visible">
+   <defs><linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--pink)" stop-opacity=".85"/><stop offset="1" stop-color="var(--pink)" stop-opacity=".15"/></linearGradient></defs>
+   ${ticks.map(t=>`<line x1="${pl}" x2="${W-pr}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line2)"/><text x="${pl-8}" y="${y(t)+4}" text-anchor="end" font-size="11" fill="var(--muted)">${K(t)}</text>`).join("")}
+   <path d="${area}" fill="url(#ga)"/><path d="${d}" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linejoin="round"/>
+   ${points.map((p,i)=>`${i%every===0||i===points.length-1?`<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="11" fill="var(--muted)">${p.l}</text>`:""}
+     <circle cx="${x(i)}" cy="${y(p.v)}" r="3.2" fill="var(--card)" stroke="var(--green)" stroke-width="1.8"/>
+     <rect x="${x(i)-(W/points.length)/2}" y="0" width="${W/points.length}" height="${H}" fill="transparent" data-i="${i}" class="hov"/>`).join("")}
+  </svg><div class="chart-tip" id="tip"></div></div>`;
+}
+function bindChart(points,unit){
+  const box=$("#lc");if(!box)return;const tip=$("#tip");
+  box.querySelectorAll(".hov").forEach(r=>{
+    r.addEventListener("mouseenter",e=>{const p=points[+r.dataset.i];tip.innerHTML=`<b>${p.full}</b><br>${p.v.toLocaleString()} ${unit} · ${p.n} post${p.n===1?"":"s"}`;tip.style.display="block"});
+    r.addEventListener("mousemove",e=>{const b=box.getBoundingClientRect();tip.style.left=Math.min(e.clientX-b.left+12,b.width-170)+"px";tip.style.top=(e.clientY-b.top-50)+"px"});
+    r.addEventListener("mouseleave",()=>tip.style.display="none");
+  });
+}
+function impressionSeries(days){
+  const pts=[];const end=DATA.dataAsOf;
+  if(days===7){for(let i=6;i>=0;i--){const d=new Date(+end-i*DAY);const ps=DATA.posts.filter(p=>iso(p.date)===iso(d));pts.push({l:DOW[d.getDay()],full:DOW[d.getDay()]+" "+fd(d),v:ps.reduce((s,p)=>s+p.impressions,0),n:ps.length})}}
+  else{const weeks=Math.ceil(days/7);for(let w=weeks-1;w>=0;w--){const e=new Date(+end-w*7*DAY),s=new Date(+e-7*DAY);const ps=DATA.posts.filter(p=>p.date>s&&p.date<=e);const st=new Date(+s+DAY);pts.push({l:fd(st),full:"Week of "+fd(st),v:ps.reduce((a,p)=>a+p.impressions,0),n:ps.length})}}
+  return pts;
+}
+function gauge(val,goal){
+  const n=44,f=Math.round(Math.min(val/goal,1)*n);let s="";
+  for(let i=0;i<n;i++){const a=Math.PI*(1-i/(n-1));const r1=78,r2=96;const cx=110,cy=104;
+    s+=`<line x1="${cx+r1*Math.cos(a)}" y1="${cy-r1*Math.sin(a)}" x2="${cx+r2*Math.cos(a)}" y2="${cy-r2*Math.sin(a)}" stroke="${i<f?"var(--tan)":"var(--line)"}" stroke-width="3.2" stroke-linecap="round"/>`}
+  return `<svg viewBox="0 0 220 116" width="100%" style="max-width:260px;display:block;margin:6px auto 0">${s}
+  <text x="110" y="96" text-anchor="middle" font-family="Fraunces,serif" font-size="30" fill="var(--ink)">${Math.round(val/goal*100)}%</text></svg>`;
+}
+
+/* ===================== PAGES ===================== */
+function greeting(){const h=new Date().getHours();return h<12?"Good morning":h<17?"Good afternoon":"Good evening"}
+function sampleBanner(){
+  if(ST.bannerOff) return "";
+  return `<div class="banner">${ICON.info}<span><b>Sample data.</b> These numbers are made up so you can click around. Your real numbers arrive after the first LinkedIn sync. Ideas, pipeline titles and Substack links are from your sheet.</span><button id="banX">${ICON.x}</button></div>`;
+}
+function bindBanner(){const b=$("#banX");if(b)b.onclick=()=>{ST.bannerOff=true;save();route()}}
+
+const PAGES={};
+PAGES.overview=()=>{
+  const r=ST.range,s=rangeStats(r);
+  const pts=impressionSeries(r);
+  const weeks4=inRange(28).length, goal=DATA.postingGoalPerWeek*4;
+  const top=sortPosts(s.cur,"impressions")[0], saved=sortPosts(s.cur,"impressions").sort((a,b)=>b.saves-a.saves)[0], best=sortPosts(s.cur,"er")[0];
+  const carousels=s.cur.filter(p=>p.format==="Carousel").length;
+  return `${sampleBanner()}
+  <div class="head"><div><h1 class="h1">${greeting()}, Sahla</h1>
+  <p class="sub">${DATA.posts.length?`You had ${K(s.imp)} impressions across ${s.cur.length} post${s.cur.length===1?"":"s"} in the last ${r} days. Here's what's working and what to make next.`:"No LinkedIn numbers yet. They arrive after the Chrome extension's first sync."}</p></div>${rangeHead()}</div>
+  <div class="grid g4">
+   ${stat("c-pink",0,"var(--pink-d)","eye","Impressions",K(s.imp),deltaPill(s.imp,s.pimp),`vs. ${K(s.pimp)}<br>the ${r} days before`)}
+   ${stat("c-sage",1,"var(--sage-d)","heart","Avg engagement",s.cur.length?pct(s.er):"–",s.cur.length&&s.prev.length?deltaPill(s.er,s.per,"pts"):"",`vs. ${s.prev.length?pct(s.per):"–"}<br>the ${r} days before`)}
+   ${stat("c-tan",2,"var(--tan-d)","users","Net followers",(s.net>=0?"+":"")+s.net,deltaPill(s.net,s.pnet,"abs"),`vs. +${s.pnet}<br>the ${r} days before`)}
+   ${stat("c-olive",3,"var(--olive-d)","doc","Posts",s.cur.length,deltaPill(s.cur.length,s.prev.length,"abs").replace(/<\/i>(\d+)</,(m,n)=>`</i>${n} post${n==="1"?"":"s"}<`),`vs. ${s.prev.length}<br>the ${r} days before`)}
+  </div>
+  <div class="grid split mt">
+   <div class="card"><div class="card-h"><h3 class="h2">Impressions by ${r===7?"day":"week"} posted</h3><span class="lbl">Hover for details</span></div>
+     <div style="display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap">
+      <div style="min-width:120px"><div class="serif" style="font-size:40px;line-height:1.1">${K(s.imp)}</div><span class="chart-delta">${deltaPill(s.imp,s.pimp)}</span><div class="lbl" style="margin-top:10px">Last ${r} days vs. the ${r} before</div></div>
+      <div style="flex:1;min-width:280px">${lineChart(pts)}</div></div></div>
+   <div class="card"><div class="card-h"><h3 class="h2">Posting consistency</h3><span class="lbl">Last 4 weeks</span></div>
+     ${gauge(weeks4,goal)}
+     <p class="lbl" style="text-align:center;margin:4px 0 14px">${weeks4} of ${goal} posts in 4 weeks · goal ${DATA.postingGoalPerWeek} a week</p>
+     <div style="text-align:center"><a class="btn sm" href="#calendar">View calendar</a></div></div>
+  </div>
+  <div class="grid split mt topgrid">
+   <div class="card"><div class="card-h"><h3 class="h2">Top content</h3><div style="display:flex;gap:8px;align-items:center"><span class="lbl">Last ${r} days</span>${sortSel("topSort",ST.topSort)}</div></div>${postTable(s.cur,5,"",ST.topSort)}</div>
+   <div class="card hlcard"><div class="card-h"><h3 class="h2">Highlights</h3></div>
+    ${top?[["star","Top post, "+r+" days",top.title,K(top.impressions),top.url],["bookmark","Most saved",saved.title,saved.saves+" saves",saved.url],["heart","Best engagement",best.title,pct(er(best)),best.url]].map(h=>`
+     <div class="ins hl" role="link" tabindex="0" title="Open post on LinkedIn" data-url="${esc(h[4])}"><div class="ck" style="background:var(--line2)">${ICON[h[0]]}</div><div style="flex:1;min-width:0"><small class="lbl">${h[1]}</small><b style="font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(h[2])}</b></div><span class="go" aria-hidden="true">↗</span></div>`).join(""):`<div class="nothing">No posts in this period.</div>`}
+   </div>
+  </div>`;
+};
+PAGES.overview.bind=()=>{bindRange();bindBanner();bindChart(impressionSeries(ST.range),"impressions");$("#topSort").onchange=e=>{ST.topSort=e.target.value;save();route()}};
+
+PAGES.breakdown=()=>{
+  const r=ST.range,s=rangeStats(r);
+  const avgImp=s.cur.length?s.imp/s.cur.length:0, pavg=s.prev.length?s.pimp/s.prev.length:0;
+  const I=DATA.insights;
+  return `${sampleBanner()}
+  <div class="head"><div><h1 class="h1">Breakdown</h1><p class="sub">Top posts, what's working and what's not, across all your LinkedIn posts.</p></div>${rangeHead()}</div>
+  <div class="grid g3">
+   ${stat("c-pink",0,"var(--pink-d)","users","Followers",s.total.toLocaleString(),deltaPill(s.net,s.pnet,"abs"),`vs. +${s.pnet} new followers<br>the ${r} days before`)}
+   ${stat("c-sage",1,"var(--sage-d)","eye","Avg impressions per post",K(avgImp),deltaPill(avgImp,pavg),`vs. ${K(pavg)} per post<br>the ${r} days before`)}
+   ${stat("c-tan",2,"var(--tan-d)","heart","Avg engagement",s.cur.length?pct(s.er):"–",s.prev.length?deltaPill(s.er,s.per,"pts"):"",`vs. ${s.prev.length?pct(s.per):"–"}<br>the ${r} days before`)}
+  </div>
+  <div class="grid split mt">
+   <div class="card"><div class="card-h"><h3 class="h2">Top posts</h3><div style="display:flex;gap:8px;align-items:center"><span class="lbl">Last ${r} days</span>${sortSel("bdSort",ST.bdSort)}</div></div>${postTable(s.cur,12,"",ST.bdSort)}</div>
+   <div>
+    <div class="card"><div class="card-h"><h3 class="h2">What's working</h3></div>
+     ${I.working.map(w=>`<div class="ins"><div class="ck" style="background:var(--sage)">${ICON.check}</div><div><b>${esc(w.t)}</b><p>${esc(w.d)}</p></div></div>`).join("")}</div>
+    <div class="card mt"><div class="card-h"><h3 class="h2">What's not working</h3></div>
+     ${I.notWorking.map(w=>`<div class="ins"><div class="ck" style="background:var(--pink)">${ICON.x}</div><div><b>${esc(w.t)}</b><p>${esc(w.d)}</p></div></div>`).join("")}
+     <p class="lbl" style="margin:10px 0 0">${I.writtenOn?"Written by Claude, week of "+I.writtenOn+".":"Written by Claude every Monday. The first ones appear after your first weekly refresh."}</p></div>
+   </div>
+  </div>`;
+};
+PAGES.breakdown.bind=()=>{bindRange();bindBanner();$("#bdSort").onchange=e=>{ST.bdSort=e.target.value;save();route()}};
+
+/* ----- Saved posts ----- */
+function savedCard(s){
+  const opts=`<option value="">Not sorted</option>`+ST.folders.map(f=>`<option ${s.cat===f?"selected":""}>${esc(f)}</option>`).join("");
+  return `<div class="pc" data-id="${s.id}">
+   <div class="img">${s.img?`<img src="${esc(s.img)}" alt="">`:ph(+s.id.replace(/\D/g,""),"")}${s.cat?`<span class="cat">${esc(s.cat)}</span>`:""}</div>
+   <div class="bd">
+    <div class="who"><div class="av">${initials(s.author)}</div><div><b>${esc(s.author)}</b><small>Saved ${fd(parse(s.savedOn))}</small></div>
+     <a href="${esc(s.url)}" target="_blank" rel="noopener" title="Open on LinkedIn" style="margin-left:auto;color:var(--muted)">${ICON.ext}</a></div>
+    <div class="clamp">${esc(s.text)}</div>
+    <div class="notebox ${s.note?"":"empty"}" data-note="${s.id}">${s.note?esc(s.note):"Why I saved this..."}</div>
+    <div class="ft"><select class="sel" data-cat="${s.id}">${opts}</select>
+     <button class="btn sm" data-send="saved:${s.id}" title="Send to content bank">${ICON.bulb}Content bank</button></div>
+   </div></div>`;
+}
+PAGES.saved=()=>{
+  if(ST.openFolder&&ST.folders.includes(ST.openFolder)){
+    const f=ST.openFolder,items=ST.saved.filter(s=>s.cat===f);
+    return `<button class="back" id="backF">${ICON.back}All saved posts</button>
+    <div class="head"><div><h1 class="h1">${esc(f)}</h1><p class="sub">${items.length} saved post${items.length===1?"":"s"} with your notes.</p></div></div>
+    ${items.length?`<div class="pgrid">${items.map(savedCard).join("")}</div>`:`<div class="empty-state">Nothing in this folder yet. Pick "${esc(f)}" on any saved post to move it here.</div>`}`;
+  }
+  const uns=ST.saved.filter(s=>!s.cat);
+  return `<div class="head"><div><h1 class="h1">Saved posts</h1><p class="sub">Everything you save on LinkedIn lands here. Sort it into folders and note why you saved it.</p></div>
+   <div class="acts"><span class="pill"><span class="live"></span>Extension synced ${ST.synced}</span><button class="btn primary" id="syncSaved">${ICON.refresh}Refresh</button></div></div>
+  <div class="card-h" style="justify-content:flex-start"><h3 class="h2">Not sorted yet</h3><span class="count" title="Saved posts waiting to be sorted into a folder">${uns.length}</span></div>
+  ${uns.length?`<div class="pgrid">${uns.map(savedCard).join("")}</div>`:`<div class="empty-state">All sorted. New saves will show up here first.</div>`}
+  <div class="card-h mt2"><h3 class="h2">Folders</h3></div>
+  <div class="folders">${ST.folders.map(f=>{const it=ST.saved.filter(s=>s.cat===f);const ids=it.slice(0,3).map(s=>+s.id.replace(/\D/g,""));while(ids.length<3)ids.push(ids.length+f.length);
+    return `<button class="folder" data-folder="${esc(f)}"><div class="mosaic">${ids.map(i=>`<div>${ph(i)}</div>`).join("")}</div><b>${esc(f)}</b><div class="lbl">${it.length} post${it.length===1?"":"s"}</div></button>`}).join("")}
+   <button class="folder new" id="newFolder"><div>${ICON.plus}<div>New folder</div></div></button></div>`;
+};
+PAGES.saved.bind=()=>{
+  const b=$("#backF");if(b)b.onclick=()=>{ST.openFolder=null;save();route()};
+  document.querySelectorAll("[data-folder]").forEach(el=>el.onclick=()=>{ST.openFolder=el.dataset.folder;save();route()});
+  document.querySelectorAll("[data-cat]").forEach(el=>el.onchange=()=>{const s=ST.saved.find(x=>x.id===el.dataset.cat);s.cat=el.value;route();write(setMany([[`'Saved posts'!G${s._row}`,s.cat]]),el.value?"Moved to "+el.value:"Moved to Not sorted")});
+  document.querySelectorAll("[data-note]").forEach(el=>el.onclick=()=>{
+    if(el.querySelector("textarea"))return;const s=ST.saved.find(x=>x.id===el.dataset.note);
+    el.classList.remove("empty");el.innerHTML=`<textarea placeholder="Why I saved this...">${esc(s.note)}</textarea>`;
+    const ta=el.querySelector("textarea");ta.focus();ta.onblur=()=>{const v=ta.value.trim();if(v!==s.note){s.note=v;write(setMany([[`'Saved posts'!H${s._row}`,v]]),"Note saved")}route()};
+  });
+  const nf=$("#newFolder");if(nf)nf.onclick=()=>promptModal("New folder","Folder name","",v=>{if(!v||ST.folders.includes(v))return;ST.folders.push(v);save();route();toast("Folder added")});
+  const sy=$("#syncSaved");if(sy)sy.onclick=()=>refreshData(sy);
+  bindSend();
+};
+
+/* ----- Substack ----- */
+function writerList(){return DATA.substack.filter(w=>ST.writers.includes(w.writer))}
+function currentPost(w){
+  const unread=w.posts.filter(p=>!ST.read.includes(p.id)); if(!unread.length) return null;
+  const cur=ST.current[w.writer]; const keep=unread.find(p=>p.id===cur);
+  if(keep) return keep; // stays until you mark it read (new posts wait their turn)
+  ST.current[w.writer]=unread[0].id; save(); return unread[0];
+}
+function unreadCount(){return writerList().reduce((n,w)=>n+w.posts.filter(p=>!ST.read.includes(p.id)).length,0)}
+PAGES.substack=()=>{
+  const ws=writerList();
+  return `<div class="head"><div><h1 class="h1">Substack</h1><p class="sub">One unread post from each writer. Mark it read and their next one moves up.</p></div>
+   <div class="acts"><span class="pill"><span class="live"></span>Checked every morning at 7:00</span><span class="pill">${unreadCount()} unread in total</span></div></div>
+  <div class="sgrid">${ws.map((w,i)=>{const p=currentPost(w);const left=w.posts.filter(x=>!ST.read.includes(x.id)).length;
+   const col=["var(--pink)","var(--sage)","var(--tan)","var(--olive)"][i%4];
+   return `<div class="sc"><div class="who"><div class="wav" style="background:${col}">${initials(w.writer)}</div><div><b>${esc(w.writer)}</b><small>${esc(w.by)}</small></div><span class="tag2" style="margin-left:auto">${left} unread</span></div>
+    ${p?`<h3 class="ttl"><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a></h3><p class="ex">${esc(p.ex)}</p><div class="lbl">${fd(parse(p.date))}, ${parse(p.date).getFullYear()}</div>
+     <div class="ft"><a class="btn primary sm" href="${esc(p.url)}" target="_blank" rel="noopener">${ICON.ext}Open on Substack</a><button class="btn sm" data-read="${p.id}">${ICON.check}Mark as read</button><button class="btn sm" data-send="sub:${p.id}">${ICON.bulb}Content bank</button></div>`
+     :`<div class="empty-state" style="padding:20px">All caught up with ${esc(w.writer)}.</div>`}</div>`}).join("")}</div>${ws.length?"":`<div class="empty-state">No writers yet. Add a Substack link in Settings and its posts show up after the next morning check.</div>`}`;
+};
+PAGES.substack.bind=()=>{
+  document.querySelectorAll("[data-read]").forEach(b=>b.onclick=()=>{const id=b.dataset.read;let p;DATA.substack.forEach(w=>w.posts.forEach(x=>{if(x.id===id)p=x}));ST.read.push(id);if(p)p.read=true;route();if(p)write(setMany([[`'Substack'!F${p._row}`,"Read"]]),"Marked as read. Next one moved up.")});
+  bindSend();
+};
+
+/* ----- Content bank ----- */
+PAGES.bank=()=>{
+  return `<div class="head"><div><h1 class="h1">Content bank</h1><p class="sub">Every idea you send here, sorted by series. Synced with the Idea Bank tab in your sheet.</p></div>
+   <div class="acts"><button class="btn primary" id="addIdea">${ICON.plus}Add idea</button></div></div>
+  <div class="card-h"><h3 class="h2">Drafts ready per series</h3></div>
+  <div class="grid g4">${DATA.draftsPerSeries.map((d,i)=>stat(["c-pink","c-sage","c-tan","c-olive"][i],i,["var(--pink-d)","var(--sage-d)","var(--tan-d)","var(--olive-d)"][i],"doc",esc(d.s),`${d.drafted}<span class="lbl" style="font-family:var(--sans);font-size:13px">/ 5 drafted</span>`,"",`${d.designed} designed · ${esc(d.status)}`)).join("")}</div>
+  <div class="card-h mt2"><h3 class="h2">Ideas</h3><span class="lbl">${ST.bank.length} ideas</span></div>
+  <div class="kan">${ST.bankSections.map(sec=>{const it=ST.bank.filter(b=>b.sec===sec);
+   return `<div class="col"><div class="col-h"><i style="width:8px;height:8px;border-radius:50%;background:${SER_C[sec]||"var(--muted)"}"></i>${esc(sec)}<span class="n">${it.length}</span><button data-addin="${esc(sec)}" title="Add idea here">${ICON.plus.replace('class="i"','class="i" style="width:14px;height:14px"')}</button></div>
+    ${it.length?it.map(b=>`<div class="kc" data-idea="${b.id}"><div class="m"><span>Added ${fd(parse(b.date))}</span></div><b style="margin-top:4px">${esc(b.idea)}</b>
+     ${b.link?`<a class="lnk" href="${esc(b.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${ICON.ext.replace('class="i"','class="i" style="width:12px;height:12px"')}${esc(domain(b.link))}</a>`:""}
+     ${b.note?`<div class="nt">${esc(b.note)}</div>`:""}</div>`).join(""):`<div class="nothing">Nothing here yet</div>`}</div>`}).join("")}</div>`;
+};
+PAGES.bank.bind=()=>{
+  $("#addIdea").onclick=()=>ideaModal({});
+  document.querySelectorAll("[data-addin]").forEach(b=>b.onclick=()=>ideaModal({sec:b.dataset.addin}));
+  document.querySelectorAll("[data-idea]").forEach(c=>c.onclick=()=>ideaModal(ST.bank.find(b=>b.id===c.dataset.idea)));
+};
+
+/* ----- Content calendar ----- */
+PAGES.calendar=()=>{
+  const P=ST.pipeline,now=TODAY,wk=new Date(+now+7*DAY);
+  const inPipe=P.filter(p=>p.stage!=="Posted"),due=P.filter(p=>p.due&&p.stage!=="Posted"&&parse(p.due)>=new Date(+now-DAY)&&parse(p.due)<=wk);
+  const sched=P.filter(p=>p.stage==="Scheduled").sort((a,b)=>a.due.localeCompare(b.due)),posted=P.filter(p=>p.stage==="Posted");
+  const drafted=inPipe.filter(p=>p.stage==="Drafted").length;
+  const v=ST.calView;
+  return `<div class="head"><div><h1 class="h1">Content calendar</h1><p class="sub">Live from the Post Pipeline tab in your LinkedIn Post Tracker. Plan here and changes sync back.</p></div>
+   <div class="acts"><span class="pill">${ICON.check.replace('class="i"','class="i" style="width:14px;height:14px"')}<b>${P.length}</b> items synced</span>
+   <a class="btn primary" id="openSheet" href="${esc(ST.sheetLink||"#settings")}" ${ST.sheetLink?'target="_blank" rel="noopener"':""}>${ICON.ext}Open in Sheets</a></div></div>
+  <div class="grid g4">
+   ${stat("c-pink",0,"var(--pink-d)","layers","In pipeline",inPipe.length,"",`${drafted} in Drafted`)}
+   ${stat("c-sage",1,"var(--sage-d)","cal","Due this week",due.length,"",`${fd(now)} – ${fd(wk)}`)}
+   ${stat("c-tan",2,"var(--tan-d)","send","Scheduled",sched.length,"",sched[0]?"Next: "+esc(sched[0].title.replace(/^Sample: /,"")).slice(0,34)+"…":"Nothing scheduled")}
+   ${stat("c-olive",3,"var(--olive-d)","check","Posted",posted.length,"","All time in tracker")}
+  </div>
+  <div class="card mt">
+   <div class="card-h"><div class="seg" id="calSeg">${[["month","Month",ICON.cal],["pipeline","Pipeline",ICON.kan],["list","List",ICON.list]].map(o=>`<button data-v="${o[0]}" class="${v===o[0]?"on":""}" style="display:inline-flex;gap:6px;align-items:center">${o[2].replace('class="i"','class="i" style="width:14px;height:14px"')}${o[1]}</button>`).join("")}</div>
+   ${v==="month"?`<div style="display:flex;gap:8px;align-items:center"><button class="iconbtn" style="width:32px;height:32px" id="mPrev">‹</button><b style="min-width:120px;text-align:center">${["January","February","March","April","May","June","July","August","September","October","November","December"][ST.calMonth[1]]} ${ST.calMonth[0]}</b><button class="iconbtn" style="width:32px;height:32px" id="mNext">›</button><button class="btn sm" id="mToday">Today</button></div>`:""}</div>
+   ${v==="month"?monthView():v==="pipeline"?pipelineView():listView()}
+   <div class="legend" style="margin-top:14px">${DATA.stages.map(s=>`<span style="display:inline-flex;gap:6px;align-items:center"><i style="width:8px;height:8px;border-radius:50%;background:${STAGE_C[s][1]}"></i>${s}</span>`).join("")}</div>
+  </div>`;
+};
+function monthView(){
+  const [y,m]=ST.calMonth,first=new Date(y,m,1),start=new Date(+first-((first.getDay()+6)%7)*DAY);
+  let h=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d=>`<div class="dh">${d}</div>`).join("");
+  for(let i=0;i<42;i++){const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i);
+    if(i===35&&d.getMonth()!==m)break;
+    const ev=ST.pipeline.filter(p=>p.due===iso(d));
+    h+=`<div class="d ${d.getMonth()!==m?"out":""} ${iso(d)===iso(TODAY)?"today":""}"><span class="dn">${d.getDate()}</span>${ev.map(e=>{const c=STAGE_C[e.stage];return `<button class="ev" data-item="${e.id}" style="background:${c[0]};border-left-color:${c[1]};color:#2A2A24" title="${esc(e.title)}">${esc(e.title)}</button>`}).join("")}</div>`}
+  return `<div class="cal">${h}</div>`;
+}
+function rel(due){const sp=(t,soon)=>`<span class="lbl" style="${soon?"color:var(--ink);font-weight:600":""}">${t}</span>`;if(!due)return sp("Not set");const d=Math.round((parse(due)-TODAY)/DAY);
+  if(d===0)return sp("Due today",1);if(d===1)return sp("Tomorrow",1);if(d>1&&d<=3)return sp(`In ${d} days`,1);return sp(fd(parse(due)))}
+function pipelineView(){
+  return `<div class="kan">${DATA.stages.map(s=>{const it=ST.pipeline.filter(p=>p.stage===s);const c=STAGE_C[s];
+   return `<div class="col"><div class="col-h"><span class="tag2" style="background:${c[0]};color:#2A2A24"><i style="background:${c[1]}"></i>${s}</span><span class="n">${it.length}</span></div>
+   ${it.length?it.map(p=>`<div class="kc" data-item="${p.id}"><b>${esc(p.title)}</b><div class="m">${serDot(p.series)}${rel(p.due)}</div></div>`).join(""):`<div class="nothing">Nothing here</div>`}</div>`}).join("")}</div>`;
+}
+function listView(){
+  const rows=[...ST.pipeline].sort((a,b)=>(a.due||"9").localeCompare(b.due||"9"));
+  return `<table class="tbl"><thead><tr><th>Content</th><th>Stage</th><th>Series</th><th class="r">Due</th></tr></thead><tbody>${rows.map(p=>`<tr data-item="${p.id}" style="cursor:pointer"><td class="c1 one" title="${esc(p.title)}">${esc(p.title)}</td><td>${stagePill(p.stage)}</td><td>${serDot(p.series)}</td><td class="r">${rel(p.due)}</td></tr>`).join("")}</tbody></table>`;
+}
+PAGES.calendar.bind=()=>{
+  document.querySelectorAll("#calSeg button").forEach(b=>b.onclick=()=>{ST.calView=b.dataset.v;save();route()});
+  const mv=k=>{let [y,m]=ST.calMonth;m+=k;if(m<0){m=11;y--}if(m>11){m=0;y++}ST.calMonth=[y,m];save();route()};
+  if($("#mPrev")){$("#mPrev").onclick=()=>mv(-1);$("#mNext").onclick=()=>mv(1);$("#mToday").onclick=()=>{ST.calMonth=[TODAY.getFullYear(),TODAY.getMonth()];save();route()}}
+  document.querySelectorAll("[data-item]").forEach(el=>el.onclick=()=>itemModal(ST.pipeline.find(p=>p.id===el.dataset.item)));
+  if(!ST.sheetLink)$("#openSheet").onclick=()=>toast("Add your sheet link in Settings first");
+};
+
+/* ----- Trending topics ----- */
+function rotation(){const g=[[],[],[],[],[]];DATA.people.forEach((p,i)=>g[i%5].push(p));return g}
+function feed(){
+  // unopened posts from people you follow, newest group first. Opened ones leave the list.
+  const rows=DATA.feed.filter(r=>!r.opened);const order=WEEKDAYS.slice();const todayName=["Sunday",...WEEKDAYS,"Saturday"][TODAY.getDay()];
+  const groups={};rows.forEach(r=>{const g=r.group||"Other";(groups[g]=groups[g]||[]).push(r)});
+  const names=Object.keys(groups).sort((a,b)=>(a===todayName?-1:b===todayName?1:order.indexOf(b)-order.indexOf(a)));
+  return names.map(g=>({label:g===todayName?`Checked today · ${g} group`:`Still unopened · ${g} group`,
+    rows:groups[g].sort((a,b)=>(b.posted||0)-(a.posted||0)).map(r=>({...r,plat:"LinkedIn",ago:r.posted?(Math.round((Date.now()-r.posted)/36e5)<24?Math.max(1,Math.round((Date.now()-r.posted)/36e5))+"h ago":Math.round((Date.now()-r.posted)/DAY)+"d ago"):""}))}));
+}
+PAGES.trending=()=>{
+  const T=DATA.trend,f=feed(),fc=f.reduce((n,d)=>n+d.rows.length,0),active=ST.hashtags.filter(h=>!ST.paused.includes(h.tag)).length;
+  return `${sampleBanner()}<div class="head"><div><h1 class="h1">Trending topics</h1><p class="sub">What's taking off on Instagram, matched to your content, plus new posts from people you follow.</p></div>
+   <div class="acts"><span class="pill">${ICON.refresh.replace('class="i"','class="i" style="width:14px;height:14px"')}Scraped ${T.scraped}</span><button class="btn primary" id="refreshT">${ICON.refresh}Refresh</button></div></div>
+  <div class="grid g4">
+   ${stat("c-pink",0,"var(--pink-d)","flame","Topics trending",T.topics.length,"",`${T.topics.filter(t=>t.heat==="Hot").length} running hot right now`)}
+   ${stat("c-sage",1,"var(--sage-d)","cam","Top Instagram post",T.topInstagram.views,"",`Top reel this week:<br><span style="white-space:nowrap">${esc(T.topInstagram.cap.replace(/^Sample reel: /,""))}</span>`)}
+   ${stat("c-tan",2,"var(--tan-d)","star","Hashtags tracked",active,"",`${ST.hashtags.length-active} paused`)}
+   ${stat("c-olive",3,"var(--olive-d)","users","People you follow",fc,"","New posts you haven't opened yet")}
+  </div>
+  <div class="card mt"><div class="card-h"><h3 class="h2">Hashtags tracked</h3><span class="lbl">${active} active · Instagram</span></div>
+   <div style="display:flex;flex-wrap:wrap;gap:8px">${ST.hashtags.map(h=>`<span class="chip ${ST.paused.includes(h.tag)?"paused":""}"><span data-pause="${esc(h.tag)}" style="cursor:pointer" title="Click to pause or resume"><b>#${esc(h.tag)}</b> <span class="lbl">${esc(h.views)}</span></span><span class="ig">IG</span><button class="x" data-rmtag="${esc(h.tag)}" title="Remove">×</button></span>`).join("")}</div>
+   <div style="display:flex;gap:8px;margin-top:12px"><input class="input" id="newTag" placeholder="# Add a hashtag, like b2bsocial"><button class="btn primary" id="addTag">${ICON.plus}Add</button></div>
+   <div class="lbl" style="margin-top:10px">Suggested from this week's top posts: ${T.suggested.filter(s=>!ST.hashtags.some(h=>h.tag===s)).map(s=>`<button class="btn sm" data-sug="${s}" style="margin:3px 2px">+ #${s}</button>`).join("")}</div>
+   <div class="lbl" style="margin-top:8px">Click a hashtag to pause it. Free Apify credit covers about 5 hashtags and 10 accounts a week.</div></div>
+  <div class="card-h mt2"><h3 class="h2">Trending topics</h3><span class="lbl">${T.topics.length} topics from this week's top posts · summaries by Claude</span></div>
+  <div class="grid g2">${T.topics.map((t,i)=>`<div class="tc"><div style="display:flex;justify-content:space-between;align-items:center"><span class="hot" style="${t.heat==="Hot"?"":t.heat==="Rising"?"background:var(--sage);color:#4F6B3B":"background:var(--tan);color:#7a6040"}">${ICON.flame.replace('class="i"','class="i" style="width:13px;height:13px"')}${t.heat}</span><span class="ig">Instagram</span></div>
+   <h3 class="h2" style="font-family:var(--sans);font-weight:600;font-size:16px">${esc(t.name)}</h3><p class="ex" style="margin:0;color:var(--ink2);font-size:13px">${esc(t.what)}</p>
+   <div class="lbl">↗ ${esc(t.tag)}</div><div class="fit">✦ <b>Your fit:</b> ${esc(t.fit)}</div>${t.hook?`<div class="hook">"${esc(t.hook)}"</div>`:""}
+   <div style="display:flex;justify-content:flex-end"><button class="btn sm" data-send="topic:${i}">${ICON.bulb}Send to content bank</button></div></div>`).join("")}</div>${T.topics.length?"":`<div class="empty-state">Topics appear after the first weekly refresh.</div>`}
+  <div class="card mt2"><div class="card-h"><div><h3 class="h2">From people you follow</h3><div class="lbl">${DATA.people.length} people, checked in 5 groups (Mon to Fri). Open a post and it leaves the list.</div></div><a class="btn sm" href="#settings">Edit list</a></div>
+   ${f.length?f.map(d=>`<div class="daylabel">${d.label}</div>${d.rows.map(r=>`<div class="feed-row"><div class="thumb">${ph(r.ph)}</div><div class="tx"><div style="display:flex;gap:8px;align-items:center"><b>${esc(r.name)}</b><span class="${r.plat==="LinkedIn"?"lin":"ig"}">${r.plat==="LinkedIn"?"in":"IG"}</span></div><p>${esc(r.text||"New post")}</p></div><span class="when">${r.ago}</span><a class="btn sm" href="#" data-open="${r.id}">${ICON.ext}Open</a></div>`).join("")}`).join(""):`<div class="empty-state">You've opened everything. Tomorrow's group gets checked in the morning.</div>`}
+  </div>`;
+};
+PAGES.trending.bind=()=>{
+  bindBanner();bindSend();
+  $("#refreshT").onclick=()=>refreshData($("#refreshT"));
+  document.querySelectorAll("[data-pause]").forEach(el=>el.onclick=()=>{const t=el.dataset.pause;const h=ST.hashtags.find(x=>x.tag===t);const pz=!ST.paused.includes(t);ST.paused=pz?[...ST.paused,t]:ST.paused.filter(x=>x!==t);route();if(h&&h._row)write(setMany([[`'Insights'!D${h._row}`,pz?"Paused":"Active"]]),pz?"Paused #"+t:"Tracking #"+t+" again")});
+  document.querySelectorAll("[data-rmtag]").forEach(el=>el.onclick=()=>confirmModal(`Remove #${el.dataset.rmtag}?`,"It stops being tracked from the next refresh.",()=>{const h=ST.hashtags.find(x=>x.tag===el.dataset.rmtag);ST.hashtags=ST.hashtags.filter(x=>x!==h);route();if(h&&h._row)write(setMany([[`'Insights'!D${h._row}`,"Removed"]]),"Hashtag removed")}));
+  const add=v=>{v=v.replace(/^#/,"").trim().toLowerCase();if(!v||ST.hashtags.some(h=>h.tag===v))return;const h={tag:v,views:"new",_row:null};ST.hashtags.push(h);route();write(addRow("Insights",[iso(new Date()),"Hashtag",v,"Active"]).then(r=>{h._row=r}),"Tracking #"+v)};
+  $("#addTag").onclick=()=>add($("#newTag").value);$("#newTag").onkeydown=e=>{if(e.key==="Enter")add(e.target.value)};
+  document.querySelectorAll("[data-sug]").forEach(b=>b.onclick=()=>add(b.dataset.sug));
+  document.querySelectorAll("[data-open]").forEach(a=>a.onclick=e=>{e.preventDefault();const r=DATA.feed.find(x=>x.id===a.dataset.open);if(r){window.open(r.url,"_blank","noopener");r.opened=true;write(setMany([[`'People feed'!G${r._row}`,"Yes"]]))}route()});
+};
+
+/* ----- Settings ----- */
+PAGES.settings=()=>{
+  const g=rotation(),dn=["Mon","Tue","Wed","Thu","Fri"],td=TODAY.getDay()-1;
+  const listBlock=(title,arr,key,ph)=>`<div class="card"><div class="card-h"><h3 class="h2">${title}</h3><span class="count">${arr.length}</span></div>
+   ${arr.map(x=>`<div class="set-row"><span class="grow">${esc(x)}</span><button class="btn sm" data-rm="${key}" data-v="${esc(x)}">${ICON.trash}Remove</button></div>`).join("")}
+   <div style="display:flex;gap:8px;margin-top:12px"><input class="input" data-addv="${key}" placeholder="${ph}"><button class="btn primary" data-add="${key}">${ICON.plus}Add</button></div></div>`;
+  return `<div class="head"><div><h1 class="h1">Settings</h1><p class="sub">Folders, sections, people and the weekly Claude prompt. Removing anything always asks first.</p></div></div>
+  <div class="grid g2">
+   <div class="card"><div class="card-h"><h3 class="h2">Your account</h3></div>
+    <div class="set-row"><span class="grow">Colour palette</span><select class="sel" id="palSel"><option value="plm" ${ST.palette!=="matcha"?"selected":""}>Pretty Little Marketer</option><option value="matcha" ${ST.palette==="matcha"?"selected":""}>Matcha</option></select></div>
+    <div class="set-row"><span class="grow">Your data</span><a class="btn sm" href="${esc(ST.sheetLink)}" target="_blank" rel="noopener">${ICON.ext}Open LinkedIn Post Tracker</a></div>
+    <div class="set-row"><span class="grow">Posting goal</span><span class="lbl">${DATA.postingGoalPerWeek} posts a week (from your sheet)</span></div></div>
+   <div class="card"><div class="card-h"><h3 class="h2">Weekly Claude prompt</h3><button class="btn primary sm" id="copyP">Copy</button></div>
+    <p class="lbl" style="margin-top:0">For when you're on the free plan: paste this into Claude every Monday. It writes What's working and Trending topics into your sheet.</p>
+    <div class="prompt">${esc(WEEKLY_PROMPT)}</div></div>
+   ${listBlock("Saved post folders",ST.folders,"folders","New folder name")}
+   ${listBlock("Content bank sections",ST.bankSections,"bankSections","New section name")}
+   ${listBlock("Substack writers",ST.writers,"writers","Substack link, e.g. name.substack.com")}
+   <div class="card"><div class="card-h"><h3 class="h2">Backup</h3></div>
+    <p class="lbl" style="margin-top:0">Your sheet is the main copy. This downloads your dashboard settings and edits as a file too.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="bk">${ICON.dl}Download backup</button></div></div>
+  </div>
+  <div class="card mt"><div class="card-h"><div><h3 class="h2">People you follow</h3><div class="lbl">Daily and Weekly lists from your Engagement tab, split into 5 groups. Each weekday, one group gets checked.</div></div><span class="count">${DATA.people.length}</span></div>
+   <div class="rot">${g.map((grp,i)=>`<div class="day ${i===td?"today":""}"><b>${dn[i]}${i===td?" · today":""}</b>${grp.map(n=>`<div>${esc(n)}</div>`).join("")}</div>`).join("")}</div></div>`;
+};
+PAGES.settings.bind=()=>{
+  $("#copyP").onclick=()=>{(navigator.clipboard?navigator.clipboard.writeText(WEEKLY_PROMPT):Promise.reject()).then(()=>toast("Prompt copied"),()=>toast("Select the text and copy it"))};
+  $("#palSel").onchange=e=>{setPalette(e.target.value);toast("Palette switched")};
+  document.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{const k=b.dataset.rm,v=b.dataset.v;
+    confirmModal(`Remove "${v}"?`,k==="folders"?"Posts in this folder move back to Not sorted.":k==="bankSections"?"Ideas in this section will need a new section.":"You'll stop seeing their posts.",()=>{
+      ST[k]=ST[k].filter(x=>x!==v);save();route();
+      if(k==="folders"){const ch=ST.saved.filter(s=>s.cat===v);ch.forEach(s=>s.cat="");route();if(ch.length)write(setMany(ch.map(s=>[`'Saved posts'!G${s._row}`,""])),"Removed. Its posts are back in Not sorted.");else toast("Removed")}
+      else if(k==="writers"){const w=DATA.substack.find(x=>x.writer===v);if(w){DATA.substack=DATA.substack.filter(x=>x!==w);route();if(w.rows.length)write(setMany(w.rows.map(r=>[`'Substack'!F${r}`,"Removed"])),"Removed. You won't see their posts any more.")}}
+      else toast("Removed")})});
+  document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{const k=b.dataset.add,inp=document.querySelector(`[data-addv="${k}"]`),v=inp.value.trim();if(!v||ST[k].includes(v))return;
+    if(k==="writers"){const u=v.replace(/^https?:\/\//,"").replace(/\/.*$/,"").toLowerCase();if(!u.includes("."))return toast("Paste the full link, like name.substack.com");const name=u.split(".")[0];const feed="https://"+u+"/feed";
+      if(DATA.substack.some(w=>w.feed===feed))return toast("Already following");const w={writer:name,by:u,feed,rows:[],posts:[]};DATA.substack.push(w);ST.writers.push(name);route();
+      write(addRow("Substack",[name,feed,"","","","Feed"]).then(r=>{if(r)w.rows.push(r)}),"Added. Their posts show up after the next morning check.");return}
+    ST[k].push(v);save();route();toast("Added")});
+  $("#bk").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(ST,null,2)],{type:"application/json"}));a.download="command-center-backup-"+iso(new Date())+".json";a.click()};
+  
+};
+
+/* ===================== MODALS ===================== */
+function openModal(html,bind){$("#modal").innerHTML=html;$("#scrim").classList.add("show");bind&&bind()}
+function closeModal(){$("#scrim").classList.remove("show")}
+$("#scrim").addEventListener("mousedown",e=>{if(e.target.id==="scrim")closeModal()});
+function confirmModal(title,body,yes){
+  openModal(`<h3>${esc(title)}</h3><p class="sub">${esc(body)}</p><div class="acts"><button class="btn" id="mNo">Cancel</button><button class="btn dark" id="mYes">Remove</button></div>`,
+  ()=>{$("#mNo").onclick=closeModal;$("#mYes").onclick=()=>{closeModal();yes()}});
+}
+function promptModal(title,label,val,done){
+  openModal(`<h3>${esc(title)}</h3><div class="f"><label>${esc(label)}</label><input class="input" id="pv" value="${esc(val)}"></div><div class="acts"><button class="btn" id="mNo">Cancel</button><button class="btn primary" id="mYes">Save</button></div>`,
+  ()=>{$("#pv").focus();$("#mNo").onclick=closeModal;const go=()=>{const v=$("#pv").value.trim();closeModal();done(v)};$("#mYes").onclick=go;$("#pv").onkeydown=e=>{if(e.key==="Enter")go()}});
+}
+function ideaModal(b,fromLabel){
+  const isNew=!b.id;let sec=b.sec||ST.bankSections[0];
+  openModal(`<h3>${isNew?(fromLabel?"Send to content bank":"New idea"):"Edit idea"}</h3>${fromLabel?`<p class="sub">From ${esc(fromLabel)}</p>`:""}
+   <div class="f"><label>Which section?</label><div class="opts" id="secOpts">${ST.bankSections.map(s=>`<button class="opt ${s===sec?"on":""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div></div>
+   <div class="f"><label>Idea</label><textarea class="input" id="iIdea" rows="3">${esc(b.idea||"")}</textarea></div>
+   <div class="f"><label>Link to what you were reading</label><input class="input" id="iLink" value="${esc(b.link||"")}"></div>
+   <div class="f"><label>Note</label><textarea class="input" id="iNote" rows="2">${esc(b.note||"")}</textarea></div>
+   <div class="acts">${!isNew?`<button class="btn" id="iDel" style="margin-right:auto">${ICON.trash}Delete</button>`:""}<button class="btn" id="mNo">Cancel</button><button class="btn primary" id="mYes">${isNew?"Add to bank":"Save"}</button></div>`,
+  ()=>{
+    document.querySelectorAll("#secOpts .opt").forEach(o=>o.onclick=()=>{sec=o.dataset.s;document.querySelectorAll("#secOpts .opt").forEach(x=>x.classList.toggle("on",x===o))});
+    $("#mNo").onclick=closeModal;
+    $("#mYes").onclick=()=>{const idea=$("#iIdea").value.trim();if(!idea){$("#iIdea").focus();return}
+      const link=$("#iLink").value.trim(),note=$("#iNote").value.trim();
+      if(isNew){const nb={id:"i"+Date.now(),_row:null,sec,date:iso(new Date()),idea,link,note};ST.bank.unshift(nb);
+        write(addRow("Idea Bank",[iso(new Date()),"From dashboard",idea,codeFromSec(sec),fromLabel||"Added in dashboard",link,note,"New",""]).then(r=>{if(r){nb._row=r;nb.id="i"+r}}),"Added to "+sec+" and your Idea Bank tab")}
+      else{Object.assign(b,{sec,idea,link,note});if(b._row)write(setMany([[`'Idea Bank'!C${b._row}`,idea],[`'Idea Bank'!D${b._row}`,codeFromSec(sec)],[`'Idea Bank'!F${b._row}`,link],[`'Idea Bank'!G${b._row}`,note]]),"Saved")}
+      closeModal();route()};
+    const d=$("#iDel");if(d)d.onclick=()=>{closeModal();confirmModal("Remove this idea?","It's marked Archived in your Idea Bank tab, so nothing is lost.",()=>{ST.bank=ST.bank.filter(x=>x.id!==b.id);route();if(b._row)write(setMany([[`'Idea Bank'!H${b._row}`,"Archived"]]),"Idea removed")})};
+  });
+}
+function bindSend(){
+  document.querySelectorAll("[data-send]").forEach(b=>b.onclick=()=>{
+    const [kind,id]=b.dataset.send.split(":");
+    if(kind==="saved"){const s=ST.saved.find(x=>x.id===id);ideaModal({idea:s.text.length>160?s.text.slice(0,160).replace(/\s\S*$/,"")+"…":s.text,link:s.url==="#"?"":s.url,note:s.note},"a saved post by "+s.author)}
+    if(kind==="sub"){let p;DATA.substack.forEach(w=>w.posts.forEach(x=>{if(x.id===id)p={...x,w:w.writer}}));ideaModal({idea:p.title,link:p.url==="#"?"":p.url},p.w)}
+    if(kind==="topic"){const t=DATA.trend.topics[+id];ideaModal({idea:t.name+": "+t.hook,note:t.fit},"Trending topics")}
+  });
+}
+function itemModal(p){
+  openModal(`<h3 style="font-size:20px">${esc(p.title)}</h3><p class="sub">${esc(p.id)} · ${esc(p.series)}</p>
+   <div class="f"><label>Stage</label><div class="opts" id="stOpts">${DATA.stages.map(s=>`<button class="opt ${s===p.stage?"on":""}" data-s="${s}">${s}</button>`).join("")}</div></div>
+   <div class="f"><label>Planned post date</label><input type="date" class="input" id="pDue" value="${esc(p.due)}"></div>
+   <div class="acts"><button class="btn" id="mNo">Cancel</button><button class="btn primary" id="mYes">Save</button></div>`,
+  ()=>{let st=p.stage;document.querySelectorAll("#stOpts .opt").forEach(o=>o.onclick=()=>{st=o.dataset.s;document.querySelectorAll("#stOpts .opt").forEach(x=>x.classList.toggle("on",x===o))});
+    $("#mNo").onclick=closeModal;$("#mYes").onclick=()=>{p.stage=st;p.due=$("#pDue").value;closeModal();route();write(setMany([[`'Post Pipeline'!H${p._row}`,st],[`'Post Pipeline'!M${p._row}`,p.due]]),"Saved to your Post Pipeline tab")}});
+}
+function fakeSync(btn,msg){const old=btn.innerHTML;btn.innerHTML=ICON.refresh.replace('class="i"','class="i spin"')+"Syncing…";btn.disabled=true;
+  setTimeout(()=>{btn.innerHTML=old;btn.disabled=false;toast(msg)},1200)}
+
+/* ===================== TOP BAR ===================== */
+function renderSync(){$("#synctext").textContent="LinkedIn synced "+ST.synced}
+$("#syncbtn").onclick=()=>refreshData();
+
+function notifications(){
+  const n=[];const due=ST.pipeline.filter(p=>p.due&&p.stage!=="Posted"&&parse(p.due)>=TODAY&&parse(p.due)<=new Date(+TODAY+7*DAY));
+  const u=unreadCount(),uns=ST.saved.filter(s=>!s.cat).length,f=feed().reduce((a,d)=>a+d.rows.length,0);
+  if(due.length)n.push(["cal","var(--sage)",`${due.length} post${due.length>1?"s":""} due this week`,due[0].title,"calendar"]);
+  if(uns)n.push(["bookmark","var(--pink)",`${uns} saved post${uns>1?"s":""} to sort`,"New saves from LinkedIn","saved"]);
+  if(u)n.push(["book","var(--tan)",`${u} unread Substack post${u>1?"s":""}`,"One from each writer is waiting","substack"]);
+  if(f)n.push(["users","var(--olive)",`${f} new post${f>1?"s":""} from people you follow`,"Today's group was checked this morning","trending"]);
+  n.push(["msg","var(--line2)","Monday: weekly Claude refresh","Copy the prompt from Settings when you're on the free plan","settings"]);
+  return n;
+}
+$("#bell").onclick=e=>{e.stopPropagation();const d=$("#notes");const n=notifications();
+  d.innerHTML=`<div style="padding:8px 10px 4px" class="lbl">Notifications</div>`+n.map(x=>`<div class="note-row" data-go="${x[4]}"><div class="ic" style="background:${x[1]}">${ICON[x[0]]}</div><div style="min-width:0"><b style="font-weight:600;display:block">${esc(x[2])}</b><small class="lbl" style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px">${esc(x[3])}</small></div></div>`).join("");
+  d.classList.toggle("show");$("#belldot").style.display="none";
+  d.querySelectorAll("[data-go]").forEach(r=>r.onclick=()=>{d.classList.remove("show");location.hash=r.dataset.go});
+};
+document.addEventListener("click",e=>{if(!e.target.closest("#notes")&&!e.target.closest("#bell"))$("#notes").classList.remove("show");if(!e.target.closest(".search"))$("#results").classList.remove("show")});
+
+// search everything
+function searchAll(q){
+  q=q.toLowerCase();const out=[];const hit=s=>String(s||"").toLowerCase().includes(q);
+  ST.saved.forEach(s=>{if(hit(s.text)||hit(s.author)||hit(s.note))out.push(["bookmark","Saved post · "+(s.cat||"Not sorted"),s.text,()=>{ST.openFolder=s.cat||null;go("saved")}])});
+  DATA.substack.forEach(w=>w.posts.forEach(p=>{if(hit(p.title)||hit(w.writer))out.push(["book","Substack · "+w.writer,p.title,()=>go("substack")])}));
+  ST.bank.forEach(b=>{if(hit(b.idea)||hit(b.note))out.push(["bulb","Content bank · "+b.sec,b.idea,()=>go("bank")])});
+  ST.pipeline.forEach(p=>{if(hit(p.title))out.push(["cal","Content calendar · "+p.stage,p.title,()=>{ST.calView="list";go("calendar")}])});
+  DATA.posts.forEach(p=>{if(hit(p.title))out.push(["grid","Your post · "+fd(p.date),p.title,()=>go("breakdown")])});
+  DATA.trend.topics.forEach(t=>{if(hit(t.name)||hit(t.what))out.push(["flame","Trending topic",t.name,()=>go("trending")])});
+  return out.slice(0,10);
+}
+function go(p){save();if(location.hash==="#"+p)route();else location.hash=p}
+$("#q").addEventListener("input",e=>{const q=e.target.value.trim(),box=$("#results");if(q.length<2){box.classList.remove("show");return}
+  const r=searchAll(q);box.innerHTML=r.length?r.map((x,i)=>`<div class="res" data-i="${i}"><span style="color:var(--muted)">${ICON[x[0]]}</span><div style="min-width:0"><small>${esc(x[1])}</small><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(x[2])}</div></div></div>`).join(""):`<div class="res"><span class="lbl">No matches for "${esc(q)}"</span></div>`;
+  box.classList.add("show");box.querySelectorAll("[data-i]").forEach(el=>el.onclick=()=>{r[+el.dataset.i][3]();box.classList.remove("show");$("#q").value=""});
+});
+document.addEventListener("keydown",e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();$("#q").focus()}if(e.key==="Escape"){closeModal();$("#results").classList.remove("show")}});
+
+/* ===================== ROUTER + GOOGLE SIGN-IN ===================== */
+function route(){
+  const p=(location.hash.slice(1)||"overview");const page=PAGES[p]?p:"overview";
+  $("#page").innerHTML=PAGES[page]();PAGES[page].bind&&PAGES[page].bind();renderNav(page);
+  document.title=(page==="overview"?"":({breakdown:"Breakdown",saved:"Saved posts",substack:"Substack",bank:"Content bank",calendar:"Content calendar",trending:"Trending topics",settings:"Settings"}[page]+" · "))+"Sahla's Command Center";
+}
+window.addEventListener("hashchange",()=>{if(!LOADED)return;route();window.scrollTo(0,0)});
+ST.theme="light";document.documentElement.dataset.theme="light";
+let LOADED=false;
+function showLogin(msg){$("#login").style.display="grid";$("#loginMsg").textContent=msg||"Only your Google account can open this dashboard."}
+function hideLogin(){$("#login").style.display="none"}
+async function boot(){
+  $("#page").innerHTML=`<div class="empty-state" style="margin-top:80px">Loading your sheet…</div>`;hideLogin();
+  try{await loadAll();LOADED=true;renderSync();route()}
+  catch(e){if(e.message!=="auth"){console.error(e);$("#page").innerHTML=`<div class="empty-state" style="margin-top:80px">Couldn't read your sheet: ${esc(e.message)}<br><br><button class="btn primary" id="retry">Try again</button></div>`;$("#retry").onclick=boot}}
+}
+async function refreshData(btn){
+  const old=btn&&btn.innerHTML;
+  if(btn){btn.disabled=true;btn.innerHTML=ICON.refresh.replace('class="i"','class="i spin"')+"Refreshing…"}
+  const s=$("#syncbtn svg");s&&s.classList.add("spin");
+  try{await loadAll();renderSync();route();toast("Up to date with your sheet")}catch(e){if(e.message!=="auth")toast("Couldn't refresh. Try again in a moment.")}
+  if(btn&&document.body.contains(btn)){btn.disabled=false;btn.innerHTML=old}
+  s&&s.classList.remove("spin");
+}
+function initGoogle(){
+  if(tokenClient)return true;
+  if(!(window.google&&google.accounts&&google.accounts.oauth2))return false;
+  tokenClient=google.accounts.oauth2.initTokenClient({client_id:CONFIG.clientId,scope:CONFIG.scope,callback:resp=>{
+    if(resp.error||!resp.access_token){showLogin("Sign-in didn't finish. Try again.");return}
+    TOKEN={t:resp.access_token,exp:Date.now()+(resp.expires_in||3600)*1000};
+    try{sessionStorage.setItem("scc-tok",JSON.stringify(TOKEN))}catch(e){}
+    boot();
+  }});
+  return true;
+}
+$("#gsign").onclick=()=>{if(!initGoogle()){showLogin("Google sign-in is still loading. Try again in a second.");return}tokenClient.requestAccessToken({prompt:""})};
+$("#signout").onclick=e=>{e.preventDefault();
+  if(TOKEN&&window.google)try{google.accounts.oauth2.revoke(TOKEN.t,()=>{})}catch(x){}
+  TOKEN=null;LOADED=false;try{sessionStorage.removeItem("scc-tok")}catch(x){}
+  $("#page").innerHTML="";showLogin("You're signed out.")};
+// rows that open a LinkedIn post
+document.addEventListener("click",e=>{const el=e.target.closest("[data-url]");if(el&&el.dataset.url&&!e.target.closest("a,button,select,textarea,input"))window.open(el.dataset.url,"_blank","noopener")});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.closest){const el=e.target.closest("[data-url]");if(el&&el.dataset.url)window.open(el.dataset.url,"_blank","noopener")}});
+window.addEventListener("load",initGoogle);
+if(tokenValid())boot();else showLogin();
+</script>
+</body>
+</html>
