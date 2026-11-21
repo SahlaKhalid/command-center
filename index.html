@@ -520,7 +520,9 @@ async function loadAll(){
     notWorking:thisWeek.filter(r=>typ(r)==="not working").map(r=>({t:String(r["Text"]),d:det(r)}))};
   DATA.followers=ins.filter(r=>typ(r)==="followers").map(r=>({date:toDate(r["Week of"]),n:num(det(r))})).filter(f=>f.date).sort((a,b)=>a.date-b.date);
   DATA.trend.hashtags=ins.filter(r=>typ(r)==="hashtag"&&!/removed/i.test(det(r))).map(r=>({tag:String(r["Text"]).replace(/^#/,""),views:"",_row:r._row,paused:/paused/i.test(det(r))}));
-  DATA.trend.accounts=ins.filter(r=>typ(r)==="instagram account"&&!/removed/i.test(det(r))).map(r=>String(r["Text"]).replace(/^@/,"").trim()).filter(Boolean);
+  const accRows=ins.filter(r=>typ(r)==="instagram account"&&!/removed/i.test(det(r))&&String(r["Text"]).trim());
+  DATA.trend.accounts=accRows.map(r=>String(r["Text"]).replace(/^@/,"").trim());
+  DATA.trend.accountRows={};accRows.forEach(r=>DATA.trend.accountRows[String(r["Text"]).replace(/^@/,"").trim()]=r._row);
   DATA.trend.suggested=ins.filter(r=>typ(r)==="suggested hashtag").map(r=>String(r["Text"]).replace(/^#/,"")).slice(0,6);
   const reel=ins.filter(r=>typ(r)==="top reel").sort((a,b)=>num(b["Week of"])-num(a["Week of"]))[0];
   if(reel)DATA.trend.topInstagram={views:det(reel)||"–",cap:String(reel["Text"]||"")};
@@ -569,6 +571,7 @@ async function loadAll(){
   ST.saved=DATA.saved;ST.bank=DATA.bank;ST.pipeline=DATA.pipeline;
   ST.read=[];DATA.substack.forEach(w=>w.posts.forEach(p=>{if(p.read)ST.read.push(p.id)}));
   ST.writers=DATA.substack.map(w=>w.writer);
+  ST.creators=DATA.trend.accounts.slice();
   ST.hashtags=DATA.trend.hashtags;ST.paused=DATA.trend.hashtags.filter(h=>h.paused).map(h=>h.tag);
   ST.opened=[];ST.synced=DATA.synced;
   DATA.saved.forEach(s=>{if(s.cat&&!ST.folders.includes(s.cat))ST.folders.push(s.cat)});
@@ -1012,6 +1015,10 @@ function feed(){
   return names.map(g=>({label:g===todayName?`Checked today · ${g} group`:`Still unopened · ${g} group`,
     rows:groups[g].sort((a,b)=>(b.posted||0)-(a.posted||0)).map(r=>({...r,plat:"LinkedIn",ago:r.posted?(Math.round((Date.now()-r.posted)/36e5)<24?Math.max(1,Math.round((Date.now()-r.posted)/36e5))+"h ago":Math.round((Date.now()-r.posted)/DAY)+"d ago"):""}))}));
 }
+const REFRESH_DAYS=[1,4]; // Monday and Thursday
+function nextRefresh(){const names=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];const d=TODAY.getDay();
+  for(let i=0;i<7;i++){const x=(d+i)%7;if(REFRESH_DAYS.includes(x))return {day:i===0?"Today":names[x],note:`Twice a week: ${REFRESH_DAYS.map(n=>names[n]+"days").join(" and ")}`}}
+  return {day:"–",note:""}}
 PAGES.trending=()=>{
   const T=DATA.trend,f=feed(),fc=f.reduce((n,d)=>n+d.rows.length,0),acc=T.accounts||[];
   return `${sampleBanner()}<div class="head"><div><h1 class="h1">Trending topics</h1><p class="sub">What's taking off in B2B and tech marketing this week, matched to your content, plus new posts from people you follow.</p></div>
@@ -1019,12 +1026,9 @@ PAGES.trending=()=>{
   <div class="grid g4">
    ${stat("c-pink",0,"var(--pink-d)","flame","Topics trending",T.topics.length,"",`${T.topics.filter(t=>t.heat==="Hot").length} running hot right now`)}
    ${stat("c-sage",1,"var(--sage-d)","cam","Top Instagram post",T.topInstagram.views,"",`Top reel this week:<br><span style="white-space:nowrap">${esc(T.topInstagram.cap.replace(/^Sample reel: /,""))}</span>`)}
-   ${stat("c-tan",2,"var(--tan-d)","star","Creators watched",acc.length,"","Instagram, checked every Monday")}
+   ${stat("c-tan",2,"var(--tan-d)","star","Next refresh",nextRefresh().day,"",nextRefresh().note)}
    ${stat("c-olive",3,"var(--olive-d)","users","People you follow",fc,"","New posts you haven't opened yet")}
   </div>
-  <div class="card mt"><div class="card-h"><h3 class="h2">Creators watched</h3><span class="lbl">${acc.length} Instagram accounts · new posts collected every Monday</span></div>
-   <div style="display:flex;flex-wrap:wrap;gap:8px">${acc.map(a=>`<a class="chip" href="https://www.instagram.com/${esc(a)}/" target="_blank" rel="noopener"><b>@${esc(a)}</b><span class="ig">IG</span></a>`).join("")}</div>
-   <div class="lbl" style="margin-top:10px">Plus a weekly web scan of what's taking off in B2B, tech and SaaS marketing, and news from your Company Universe tab.</div></div>
   <div class="card-h mt2"><h3 class="h2">Trending topics</h3><span class="lbl">${T.topics.length} topics this week · researched by Claude every Monday</span></div>
   <div class="grid g2">${T.topics.map((t,i)=>`<div class="tc"><div style="display:flex;justify-content:space-between;align-items:center"><span class="hot" style="${t.heat==="Hot"?"":t.heat==="Rising"?"background:var(--sage);color:#4F6B3B":"background:var(--tan);color:#7a6040"}">${ICON.flame.replace('class="i"','class="i" style="width:13px;height:13px"')}${t.heat}</span><span class="ig">Instagram</span></div>
    <h3 class="h2" style="font-family:var(--sans);font-weight:600;font-size:16px">${esc(t.name)}</h3><p class="ex" style="margin:0;color:var(--ink2);font-size:13px">${esc(t.what)}</p>
@@ -1046,7 +1050,7 @@ PAGES.settings=()=>{
   const listBlock=(title,arr,key,ph)=>`<div class="card"><div class="card-h"><h3 class="h2">${title}</h3><span class="count">${arr.length}</span></div>
    ${arr.map(x=>`<div class="set-row"><span class="grow">${esc(x)}</span><button class="btn sm" data-rm="${key}" data-v="${esc(x)}">${ICON.trash}Remove</button></div>`).join("")}
    <div style="display:flex;gap:8px;margin-top:12px"><input class="input" data-addv="${key}" placeholder="${ph}"><button class="btn primary" data-add="${key}">${ICON.plus}Add</button></div></div>`;
-  return `<div class="head"><div><h1 class="h1">Settings</h1><p class="sub">Folders, sections, people and the weekly Claude prompt. Removing anything always asks first.</p></div></div>
+  return `<div class="head"><div><h1 class="h1">Settings</h1><p class="sub">Folders, sections, writers, creators, people and the weekly Claude prompt. Removing anything always asks first.</p></div></div>
   <div class="grid g2">
    <div class="card"><div class="card-h"><h3 class="h2">Your account</h3></div>
     <div class="set-row"><span class="grow">Colour palette</span><select class="sel" id="palSel"><option value="plm" ${ST.palette!=="matcha"?"selected":""}>Pretty Little Marketer</option><option value="matcha" ${ST.palette==="matcha"?"selected":""}>Matcha</option></select></div>
@@ -1058,6 +1062,7 @@ PAGES.settings=()=>{
    ${listBlock("Saved post folders",ST.folders,"folders","New folder name")}
    ${listBlock("Content bank sections",ST.bankSections,"bankSections","New section name")}
    ${listBlock("Substack writers",ST.writers,"writers","Substack link, e.g. name.substack.com")}
+   ${listBlock("Instagram creators",ST.creators||[],"creators","Instagram handle or link, e.g. @gigi.yaps")}
    <div class="card"><div class="card-h"><h3 class="h2">Backup</h3></div>
     <p class="lbl" style="margin-top:0">Your sheet is the main copy. This downloads your dashboard settings and edits as a file too.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="bk">${ICON.dl}Download backup</button></div></div>
@@ -1069,16 +1074,20 @@ PAGES.settings.bind=()=>{
   $("#copyP").onclick=()=>{(navigator.clipboard?navigator.clipboard.writeText(WEEKLY_PROMPT):Promise.reject()).then(()=>toast("Prompt copied"),()=>toast("Select the text and copy it"))};
   $("#palSel").onchange=e=>{setPalette(e.target.value);toast("Palette switched")};
   document.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{const k=b.dataset.rm,v=b.dataset.v;
-    confirmModal(`Remove "${v}"?`,k==="folders"?"Posts in this folder move back to Not sorted.":k==="bankSections"?"Ideas in this section will need a new section.":"You'll stop seeing their posts.",()=>{
+    confirmModal(`Remove "${v}"?`,k==="folders"?"Posts in this folder move back to Not sorted.":k==="bankSections"?"Ideas in this section will need a new section.":k==="creators"?"Their posts stop being collected from the next refresh.":"You'll stop seeing their posts.",()=>{
       ST[k]=ST[k].filter(x=>x!==v);save();route();
       if(k==="folders"){const ch=ST.saved.filter(s=>s.cat===v);ch.forEach(s=>s.cat="");route();if(ch.length)write(setMany(ch.map(s=>[`'Saved posts'!G${s._row}`,""])),"Removed. Its posts are back in Not sorted.");else toast("Removed")}
       else if(k==="writers"){const w=DATA.substack.find(x=>x.writer===v);if(w){DATA.substack=DATA.substack.filter(x=>x!==w);route();if(w._row)write(setMany([[`'Substack feeds'!C${w._row}`,"Removed"]]),"Removed. You won't see their posts any more.")}}
+      else if(k==="creators"){const r=DATA.trend.accountRows[v];DATA.trend.accounts=ST.creators.slice();if(r)write(setMany([[`'Insights'!D${r}`,"Removed"]]),"Removed. Their posts stop being collected.")}
       else toast("Removed")})});
   document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{const k=b.dataset.add,inp=document.querySelector(`[data-addv="${k}"]`),v=inp.value.trim();if(!v||ST[k].includes(v))return;
     if(k==="writers"){const u=v.replace(/^https?:\/\//,"").replace(/\/.*$/,"").toLowerCase();if(!u.includes("."))return toast("Paste the full link, like name.substack.com");const name=u.replace(/^(www|newsletter|blog)\./,"").split(".")[0].replace(/^./,c=>c.toUpperCase());const feed="https://"+u+"/feed";
       if(DATA.substack.some(w=>w.feed===feed))return toast("Already following");const w={writer:name,by:u,feed,rows:[],posts:[]};DATA.substack.push(w);ST.writers.push(name);route();
       write(addRow("Substack feeds",[name,feed,"Active"]).then(r=>{if(!r)return;w._row=r;const F=q=>`=IFERROR(TRANSPOSE(IMPORTFEED(INDEX(B:B,ROW()),"items ${q}",FALSE,5)),"")`;
         return api("/values:batchUpdate",{method:"POST",body:JSON.stringify({valueInputOption:"USER_ENTERED",data:[["D",F("title")],["I",F("url")],["N",F("created")]].map(([c,f])=>({range:`'Substack feeds'!${c}${r}`,values:[[f]]}))})})}),"Added. Their newest posts appear within an hour or two.");return}
+    if(k==="creators"){const h=v.replace(/^https?:\/\/(www\.)?instagram\.com\//i,"").replace(/[\/?#].*$/,"").replace(/^@/,"").trim().toLowerCase();inp.value="";
+      if(!h||ST.creators.includes(h))return toast("Already on the list");ST.creators.push(h);DATA.trend.accounts=ST.creators.slice();route();
+      write(addRow("Insights",[iso(new Date()),"Instagram account",h,"Active"]).then(r=>{if(r)DATA.trend.accountRows[h]=r}),"Added. Their posts get collected from the next refresh.");return}
     ST[k].push(v);save();route();toast("Added")});
   $("#bk").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(ST,null,2)],{type:"application/json"}));a.download="command-center-backup-"+iso(new Date())+".json";a.click()};
   
