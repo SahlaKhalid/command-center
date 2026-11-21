@@ -438,7 +438,7 @@ const DATA={
   savedFolders:["Playbooks","GTM","Marketing"], saved:[], substack:[],
   bankSections:SECTIONS_DEFAULT.slice(), bank:[], draftsPerSeries:[],
   stages:["Idea","Researching","Drafted","Designed","Scheduled","Posted"], pipeline:[],
-  trend:{scraped:"",hashtags:[],suggested:[],topInstagram:{views:"–",cap:"Appears after the first weekly refresh"},topics:[]},
+  trend:{scraped:"",accounts:[],hashtags:[],suggested:[],topInstagram:{views:"–",cap:"Appears after the first weekly refresh"},topics:[]},
   people:[], feed:[], synced:"not yet"
 };
 
@@ -520,6 +520,7 @@ async function loadAll(){
     notWorking:thisWeek.filter(r=>typ(r)==="not working").map(r=>({t:String(r["Text"]),d:det(r)}))};
   DATA.followers=ins.filter(r=>typ(r)==="followers").map(r=>({date:toDate(r["Week of"]),n:num(det(r))})).filter(f=>f.date).sort((a,b)=>a.date-b.date);
   DATA.trend.hashtags=ins.filter(r=>typ(r)==="hashtag"&&!/removed/i.test(det(r))).map(r=>({tag:String(r["Text"]).replace(/^#/,""),views:"",_row:r._row,paused:/paused/i.test(det(r))}));
+  DATA.trend.accounts=ins.filter(r=>typ(r)==="instagram account"&&!/removed/i.test(det(r))).map(r=>String(r["Text"]).replace(/^@/,"").trim()).filter(Boolean);
   DATA.trend.suggested=ins.filter(r=>typ(r)==="suggested hashtag").map(r=>String(r["Text"]).replace(/^#/,"")).slice(0,6);
   const reel=ins.filter(r=>typ(r)==="top reel").sort((a,b)=>num(b["Week of"])-num(a["Week of"]))[0];
   if(reel)DATA.trend.topInstagram={views:det(reel)||"–",cap:String(reel["Text"]||"")};
@@ -562,7 +563,7 @@ async function loadAll(){
   let tw=null;tt.forEach(r=>{const d=toDate(r["Week of"]);if(d&&(!tw||d>tw))tw=d});
   DATA.trend.scraped=tw?fd(tw):"not yet";
   DATA.trend.topics=tt.filter(r=>r["Topic"]&&(!tw||+toDate(r["Week of"])===+tw)).map(r=>({_row:r._row,heat:String(r["Heat"]||"Steady"),name:String(r["Topic"]),
-    what:String(r["What's happening"]||""),tag:String(r["Hashtag"]||""),fit:String(r["Your fit"]||""),hook:String(r["Suggested hook"]||""),url:String(r["Example URL"]||"")}));
+    what:String(r["What's happening"]||""),tag:String(r["Source"]||r["Hashtag"]||""),fit:String(r["Your fit"]||""),hook:String(r["Suggested hook"]||""),url:String(r["Example URL"]||"")}));
 
   // hand over to the page state
   ST.saved=DATA.saved;ST.bank=DATA.bank;ST.pipeline=DATA.pipeline;
@@ -1012,24 +1013,22 @@ function feed(){
     rows:groups[g].sort((a,b)=>(b.posted||0)-(a.posted||0)).map(r=>({...r,plat:"LinkedIn",ago:r.posted?(Math.round((Date.now()-r.posted)/36e5)<24?Math.max(1,Math.round((Date.now()-r.posted)/36e5))+"h ago":Math.round((Date.now()-r.posted)/DAY)+"d ago"):""}))}));
 }
 PAGES.trending=()=>{
-  const T=DATA.trend,f=feed(),fc=f.reduce((n,d)=>n+d.rows.length,0),active=ST.hashtags.filter(h=>!ST.paused.includes(h.tag)).length;
-  return `${sampleBanner()}<div class="head"><div><h1 class="h1">Trending topics</h1><p class="sub">What's taking off on Instagram, matched to your content, plus new posts from people you follow.</p></div>
-   <div class="acts"><span class="pill">${ICON.refresh.replace('class="i"','class="i" style="width:14px;height:14px"')}Scraped ${T.scraped}</span><button class="btn primary" id="refreshT">${ICON.refresh}Refresh</button></div></div>
+  const T=DATA.trend,f=feed(),fc=f.reduce((n,d)=>n+d.rows.length,0),acc=T.accounts||[];
+  return `${sampleBanner()}<div class="head"><div><h1 class="h1">Trending topics</h1><p class="sub">What's taking off in B2B and tech marketing this week, matched to your content, plus new posts from people you follow.</p></div>
+   <div class="acts"><span class="pill">${ICON.refresh.replace('class="i"','class="i" style="width:14px;height:14px"')}Updated ${T.scraped}</span><button class="btn primary" id="refreshT">${ICON.refresh}Refresh</button></div></div>
   <div class="grid g4">
    ${stat("c-pink",0,"var(--pink-d)","flame","Topics trending",T.topics.length,"",`${T.topics.filter(t=>t.heat==="Hot").length} running hot right now`)}
    ${stat("c-sage",1,"var(--sage-d)","cam","Top Instagram post",T.topInstagram.views,"",`Top reel this week:<br><span style="white-space:nowrap">${esc(T.topInstagram.cap.replace(/^Sample reel: /,""))}</span>`)}
-   ${stat("c-tan",2,"var(--tan-d)","star","Hashtags tracked",active,"",`${ST.hashtags.length-active} paused`)}
+   ${stat("c-tan",2,"var(--tan-d)","star","Creators watched",acc.length,"","Instagram, checked every Monday")}
    ${stat("c-olive",3,"var(--olive-d)","users","People you follow",fc,"","New posts you haven't opened yet")}
   </div>
-  <div class="card mt"><div class="card-h"><h3 class="h2">Hashtags tracked</h3><span class="lbl">${active} active · Instagram</span></div>
-   <div style="display:flex;flex-wrap:wrap;gap:8px">${ST.hashtags.map(h=>`<span class="chip ${ST.paused.includes(h.tag)?"paused":""}"><span data-pause="${esc(h.tag)}" style="cursor:pointer" title="Click to pause or resume"><b>#${esc(h.tag)}</b> <span class="lbl">${esc(h.views)}</span></span><span class="ig">IG</span><button class="x" data-rmtag="${esc(h.tag)}" title="Remove">×</button></span>`).join("")}</div>
-   <div style="display:flex;gap:8px;margin-top:12px"><input class="input" id="newTag" placeholder="# Add a hashtag, like b2bsocial"><button class="btn primary" id="addTag">${ICON.plus}Add</button></div>
-   <div class="lbl" style="margin-top:10px">Suggested from this week's top posts: ${T.suggested.filter(s=>!ST.hashtags.some(h=>h.tag===s)).map(s=>`<button class="btn sm" data-sug="${s}" style="margin:3px 2px">+ #${s}</button>`).join("")}</div>
-   <div class="lbl" style="margin-top:8px">Click a hashtag to pause it. Free Apify credit covers about 5 hashtags and 10 accounts a week.</div></div>
-  <div class="card-h mt2"><h3 class="h2">Trending topics</h3><span class="lbl">${T.topics.length} topics from this week's top posts · summaries by Claude</span></div>
+  <div class="card mt"><div class="card-h"><h3 class="h2">Creators watched</h3><span class="lbl">${acc.length} Instagram accounts · new posts collected every Monday</span></div>
+   <div style="display:flex;flex-wrap:wrap;gap:8px">${acc.map(a=>`<a class="chip" href="https://www.instagram.com/${esc(a)}/" target="_blank" rel="noopener"><b>@${esc(a)}</b><span class="ig">IG</span></a>`).join("")}</div>
+   <div class="lbl" style="margin-top:10px">Plus a weekly web scan of what's taking off in B2B, tech and SaaS marketing, and news from your Company Universe tab.</div></div>
+  <div class="card-h mt2"><h3 class="h2">Trending topics</h3><span class="lbl">${T.topics.length} topics this week · researched by Claude every Monday</span></div>
   <div class="grid g2">${T.topics.map((t,i)=>`<div class="tc"><div style="display:flex;justify-content:space-between;align-items:center"><span class="hot" style="${t.heat==="Hot"?"":t.heat==="Rising"?"background:var(--sage);color:#4F6B3B":"background:var(--tan);color:#7a6040"}">${ICON.flame.replace('class="i"','class="i" style="width:13px;height:13px"')}${t.heat}</span><span class="ig">Instagram</span></div>
    <h3 class="h2" style="font-family:var(--sans);font-weight:600;font-size:16px">${esc(t.name)}</h3><p class="ex" style="margin:0;color:var(--ink2);font-size:13px">${esc(t.what)}</p>
-   <div class="lbl">↗ ${esc(t.tag)}</div><div class="fit">✦ <b>Your fit:</b> ${esc(t.fit)}</div>${t.hook?`<div class="hook">"${esc(t.hook)}"</div>`:""}
+   ${t.tag?`<div class="lbl">↗ ${esc(t.tag)}</div>`:""}<div class="fit">✦ <b>Your fit:</b> ${esc(t.fit)}</div>${t.hook?`<div class="hook">"${esc(t.hook)}"</div>`:""}
    <div style="display:flex;justify-content:flex-end"><button class="btn sm" data-send="topic:${i}">${ICON.bulb}Send to content bank</button></div></div>`).join("")}</div>${T.topics.length?"":`<div class="empty-state">Topics appear after the first weekly refresh.</div>`}
   <div class="card mt2"><div class="card-h"><div><h3 class="h2">From people you follow</h3><div class="lbl">${DATA.people.length} people, checked in 5 groups (Mon to Fri). Open a post and it leaves the list.</div></div><a class="btn sm" href="#settings">Edit list</a></div>
    ${f.length?f.map(d=>`<div class="daylabel">${d.label}</div>${d.rows.map(r=>`<div class="feed-row"><div class="thumb">${ph(r.ph)}</div><div class="tx"><div style="display:flex;gap:8px;align-items:center"><b>${esc(r.name)}</b><span class="${r.plat==="LinkedIn"?"lin":"ig"}">${r.plat==="LinkedIn"?"in":"IG"}</span></div><p>${esc(r.text||"New post")}</p></div><span class="when">${r.ago}</span><a class="btn sm" href="#" data-open="${r.id}">${ICON.ext}Open</a></div>`).join("")}`).join(""):`<div class="empty-state">You've opened everything. Tomorrow's group gets checked in the morning.</div>`}
@@ -1038,11 +1037,6 @@ PAGES.trending=()=>{
 PAGES.trending.bind=()=>{
   bindBanner();bindSend();
   $("#refreshT").onclick=()=>refreshData($("#refreshT"));
-  document.querySelectorAll("[data-pause]").forEach(el=>el.onclick=()=>{const t=el.dataset.pause;const h=ST.hashtags.find(x=>x.tag===t);const pz=!ST.paused.includes(t);ST.paused=pz?[...ST.paused,t]:ST.paused.filter(x=>x!==t);route();if(h&&h._row)write(setMany([[`'Insights'!D${h._row}`,pz?"Paused":"Active"]]),pz?"Paused #"+t:"Tracking #"+t+" again")});
-  document.querySelectorAll("[data-rmtag]").forEach(el=>el.onclick=()=>confirmModal(`Remove #${el.dataset.rmtag}?`,"It stops being tracked from the next refresh.",()=>{const h=ST.hashtags.find(x=>x.tag===el.dataset.rmtag);ST.hashtags=ST.hashtags.filter(x=>x!==h);route();if(h&&h._row)write(setMany([[`'Insights'!D${h._row}`,"Removed"]]),"Hashtag removed")}));
-  const add=v=>{v=v.replace(/^#/,"").trim().toLowerCase();if(!v||ST.hashtags.some(h=>h.tag===v))return;const h={tag:v,views:"new",_row:null};ST.hashtags.push(h);route();write(addRow("Insights",[iso(new Date()),"Hashtag",v,"Active"]).then(r=>{h._row=r}),"Tracking #"+v)};
-  $("#addTag").onclick=()=>add($("#newTag").value);$("#newTag").onkeydown=e=>{if(e.key==="Enter")add(e.target.value)};
-  document.querySelectorAll("[data-sug]").forEach(b=>b.onclick=()=>add(b.dataset.sug));
   document.querySelectorAll("[data-open]").forEach(a=>a.onclick=e=>{e.preventDefault();const r=DATA.feed.find(x=>x.id===a.dataset.open);if(r){window.open(r.url,"_blank","noopener");r.opened=true;write(setMany([[`'People feed'!G${r._row}`,"Yes"]]))}route()});
 };
 
