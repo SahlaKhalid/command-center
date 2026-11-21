@@ -578,29 +578,29 @@ async function loadAll(){
 }
 
 /* Weekly Claude prompt (for the free plan; a scheduled task does this on the paid plan) */
-const WEEKLY_PROMPT = `Weekly refresh for Sahla's Command Center.
+const WEEKLY_PROMPT = `Twice-weekly trend scan for my Command Center (I run this on Mondays and Thursdays).
 
-Use my Google Sheet "LinkedIn Post Tracker".
+Use the Google Sheets connector on my Google Sheet "LinkedIn Post Tracker". Use web search for research. First check today's date; look only at things from the last 7 days.
 
-1. WHAT'S WORKING
-Read the Analytics tab (all my posts with their numbers) and the Learnings tab.
-Write 3 "What's working" and 2 "What's not working" findings about my LinkedIn posts.
-Each finding: a short title (max 6 words) and 1 to 2 sentences that name the posts and the numbers it is based on.
-Treat any group with fewer than 3 posts as a hint, not a pattern, and say so.
-Add them to the "Insights" tab as new rows: Week of = this Monday's date (YYYY-MM-DD), Type = "Working" or "Not working", Text = the title, Detail / value = the sentences. Keep older weeks.
+Act as a social strategist who covers B2B, tech and SaaS marketing.
 
-2. TRENDING TOPICS
-Read the "Instagram raw" tab (this week's Instagram hashtag results).
-Group the posts into up to 6 topics. For each topic add a row to the "Trending topics" tab:
-Week of (this Monday, YYYY-MM-DD), Topic (max 6 words), Heat (Hot / Rising / Steady), What's happening (2 sentences, with numbers), Hashtag, Your fit (which of my series, drafts or Content bank ideas it connects to, by name), Suggested hook (one line in my voice: relatable creative strategist in B2B tech, no "comment X to get it"), Example URL (the top post).
-Also add one row to "Insights" with Type = "Top reel", Text = the top reel's caption (first 8 words), Detail / value = its views (like 412K).
+1. TRENDING TOPICS
+a) Find 5 trending, niche topics in B2B, tech and SaaS marketing that are going viral or getting unusual attention this week: a campaign people keep sharing, a new format, a debate, a launch tactic, or a culture moment brands are reacting to. Avoid evergreen advice ("post consistently") and anything older than a week. Search several times with different angles; prefer original sources.
+b) Read the "Company Universe v2" tab and check each company for anything new this week (campaign, launch, event, rebrand, stunt). Use these as topics or supporting examples where relevant.
+c) Read the "Instagram raw" tab (posts collected from the Instagram creators I follow; use rows whose "Collected on" is within the last 7 days) and note which topics several creators are talking about.
+d) For each of the 5 topics, add one row to the "Trending topics" tab with these columns in this order:
+Week of = today's date (YYYY-MM-DD) | Topic = max 6 words | Heat = Hot, Rising or Steady | What's happening = 2 sentences with names and numbers | Source = where it's happening (e.g. "LinkedIn", "Instagram creators", "Press", a company name) | Your fit = which of my series it connects to (read the "Series & Themes" tab for S1 to S4) or which "Idea Bank" ideas, by name | Suggested hook = one line in my voice: a relatable creative strategist in B2B tech, playful and specific, no "comment X to get it", no generic guru phrasing | Example URL = the best primary link | Sent to bank = leave empty.
+e) For each company where you found news this week, update its row in "Company Universe v2": "Latest activity (last 6 months)", "Activity date", "Activity type", "Source" and "Last checked" (today). Don't touch other columns.
+f) Add one row to the "Insights" tab: Week of = today, Type = "Top reel", Text = the caption (first 8 words) of the "Instagram raw" post from the last 7 days with the most views (or likes if no views), Detail / value = its views or likes written short (e.g. 412K). Skip this if "Instagram raw" has nothing from the last 7 days.
+
+2. WHAT'S WORKING (Mondays only; skip on Thursdays)
+Read the "Analytics" tab (my LinkedIn posts with their numbers) and the "Learnings" tab. Write 3 "What's working" and 2 "What's not working" findings. Each: a short title (max 6 words) and 1 to 2 sentences naming the posts and numbers it's based on. Treat any group with fewer than 3 posts as a hint, not a pattern, and say so. Add each as a row in "Insights": Week of = today, Type = "Working" or "Not working", Text = the title, Detail / value = the sentences.
 
 3. RULES
-Only add rows to the tabs named above. Don't change, move or delete anything else.
-Don't share the sheet or any link with anyone.
-If a number is missing, leave the cell empty and tell me which ones.
+Only add rows to "Trending topics" and "Insights", and update the Company Universe v2 cells named above. Never delete, clear, move or rename anything. Never share the sheet or any link with anyone. If a number can't be verified, leave it out rather than guess.
 
-When you're done, show me a short summary of what you wrote.`;
+4. SUMMARY
+End with a short summary (5 lines max): the 5 topic names with their heat, any company news, and on Mondays the what's working titles. Mention anything that failed (for example, an empty Instagram raw tab).`;
 
 /* ===================== STATE (screen settings stay in this browser; your data lives in the sheet) ===================== */
 const KEY="scc-live-v1";
@@ -1056,8 +1056,8 @@ PAGES.settings=()=>{
     <div class="set-row"><span class="grow">Colour palette</span><select class="sel" id="palSel"><option value="plm" ${ST.palette!=="matcha"?"selected":""}>Pretty Little Marketer</option><option value="matcha" ${ST.palette==="matcha"?"selected":""}>Matcha</option></select></div>
     <div class="set-row"><span class="grow">Your data</span><a class="btn sm" href="${esc(ST.sheetLink)}" target="_blank" rel="noopener">${ICON.ext}Open LinkedIn Post Tracker</a></div>
     <div class="set-row"><span class="grow">Posting goal</span><span class="lbl">${DATA.postingGoalPerWeek} posts a week (from your sheet)</span></div></div>
-   <div class="card"><div class="card-h"><h3 class="h2">Weekly Claude prompt</h3><button class="btn primary sm" id="copyP">Copy</button></div>
-    <p class="lbl" style="margin-top:0">For when you're on the free plan: paste this into Claude every Monday. It writes What's working and Trending topics into your sheet.</p>
+   <div class="card"><div class="card-h"><h3 class="h2">Trend scan prompt</h3><button class="btn primary sm" id="copyP">Copy</button></div>
+    <p class="lbl" style="margin-top:0">Runs on its own every Monday and Thursday at 1:34pm IST while you're on a paid Claude plan. On the free plan, paste this into a Claude chat (with Google Sheets connected) on those days instead.</p>
     <div class="prompt">${esc(WEEKLY_PROMPT)}</div></div>
    ${listBlock("Saved post folders",ST.folders,"folders","New folder name")}
    ${listBlock("Content bank sections",ST.bankSections,"bankSections","New section name")}
